@@ -57,5 +57,16 @@ CHIP ALU {
     And16(a=x2, b=y2, out=XandY);
     Mux16(a=XandY, b=XplusY, sel=f, out=res);
     Not16(in=res, out=notRes);
-    Mux16(a=res, b=notRes, sel=no, out=out);
+    Mux16(a=res, b=notRes, sel=no, out=out, out[0..7]=lsb, out[8..15]=msb, out[15]=signBit);
+    // lsb: Lease significant bits
+    // msb: Most significant bits
+
+    // Compute ng
+    Mux(a=false, b=true, sel=signBit, out=ng);
+
+    // Compute zr
+    Or8Way(in=lsb, out=lsbOr8Way);
+    Or8Way(in=msb, out=msbOr8Way);
+    Or(a=lsbOr8Way, b=msbOr8Way, out=outOr16Way);
+    Mux(a=true, b=false, sel=outOr16Way, out=zr);
 }
