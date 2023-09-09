@@ -1,0 +1,101 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/CPU.hdl
+
+/**
+ * The Hack CPU (Central Processing unit), consisting of an ALU,
+ * two registers named A and D, and a program counter named PC.
+ * The CPU is designed to fetch and execute instructions written in 
+ * the Hack machine language. In particular, functions as follows:
+ * Executes the inputted instruction according to the Hack machine 
+ * language specification. The D and A in the language specification
+ * refer to CPU-resident registers, while M refers to the external
+ * memory location addressed by A, i.e. to Memory[A]. The inM input 
+ * holds the value of this location. If the current instruction needs 
+ * to write a value to M, the value is placed in outM, the address 
+ * of the target location is placed in the addressM output, and the 
+ * writeM control bit is asserted. (When writeM==0, any value may 
+ * appear in outM). The outM and writeM outputs are combinational: 
+ * they are affected instantaneously by the execution of the current 
+ * instruction. The addressM and pc outputs are clocked: although they 
+ * are affected by the execution of the current instruction, they commit 
+ * to their new values only in the next time step. If reset==1 then the 
+ * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
+ * than to the address resulting from executing the current instruction. 
+ */
+
+// Note:
+// D register: store value
+// A register: store value || memory address
+// M register: RAM[A]
+
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+    // Instruction: ixxaccccccdddjjj
+    //     i (opcode): 0 => A-instruction; 1 => C-instruction
+
+    //     C-instruction:
+    //     acccccc => comp
+    //     a: 0 => use A; 1 => use M
+    //     ddd => dest: ADM
+    //     jjj => jump
+
+    // Check instruction type
+    Not(in=instruction[15], out=Ainstruction);
+    Not(in=Ainstruction, out=Cinstruction);
+
+    // i=1; ddd=1xx => C-instruction write to register A
+    And(a=Cinstruction, b=instruction[5], out=ALUtoA);
+    Mux16(a=instruction, b=ALUout, sel=ALUtoA, out=Ain);
+
+    // load A when: A-instruction || C-instruction write to register A
+    Or(a=Ainstruction, b=ALUtoA, out=loadA);
+    ARegister(in=Ain, load=loadA, out=Aout);    // the first 15 bits hold current memory address
+
+    // a=0 => select A; a=1 => select M
+    Mux16(a=Aout, b=inM, sel=instruction[12], out=AMout);
+
+    // i=1; ddd=x1x => C-instruction write to register D
+    And(a=Cinstruction, b=instruction[4], out=loadD);
+    DRegister(in=ALUout, load=loadD, out=Dout);
+
+    // Calculate: feed D, (A or M) and the comp bits (cccccc) to ALU
+    ALU(x=Dout, y=AMout, zx=instruction[11], nx=instruction[10], zy=instruction[9], 
+    ny=instruction[8], f=instruction[7], no=instruction[6], 
+    out=ALUout, zr=zeroOut, ng=negativeOut);
+
+    // i=1; ddd=xx1 => C-instruction write to register M
+    // These will be used by 'Memory' chip
+    And(a=Cinstruction, b=instruction[3], out=writeM);
+    Or16(a=false, b=Aout, out[0..14]=addressM); // the MSB (i=0) of Aout is opcode
+    Or16(a=false, b=ALUout, out=outM);
+
+    // Program Counter logic
+    // Check ALU output and jump field (jjj) of C-instruction
+    And(a=zeroOut, b=instruction[1], out=jeq);  // jjj=010 => JEQ
+    And(a=negativeOut, b=instruction[2], out=jlt);  // jjj=100 => JLT
+
+    Or(a=zeroOut, b=negativeOut, out=zeroOrNegativeOut);
+    Not(in=zeroOrNegativeOut, out=positiveOut);
+    And(a=positiveOut, b=instruction[0], out=jgt);  // jjj=001 => JGT
+
+    Or(a=jlt, b=jeq, out=jle);
+    Or(a=jle, b=jgt, out=jumpToA);  // there's a jump => loadPC
+    And(a=Cinstruction, b=jumpToA, out=loadPC);
+
+    Not(in=loadPC, out=incPC);  // increment PC if there's no jump
+    PC(in=Aout, load=loadPC, inc=incPC, reset=reset, out[0..14]=pc); // Only use the first 14 bits
+}
