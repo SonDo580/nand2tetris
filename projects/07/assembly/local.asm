@@ -7,7 +7,7 @@ D=A
 @LCL
 D=D+M   // D = RAM[LCL] + i
 @address
-M=D     // addr = RAM[LCL] + i
+M=D     // address = RAM[LCL] + i
 
 @SP
 M=M-1   // SP--
@@ -15,7 +15,7 @@ A=M     // go to address stored in SP
 D=M     // D = RAM[SP]
 
 @address
-A=M     // go to 'address' in local segment
+A=M     // go to 'address'
 M=D     // RAM[address] = RAM[SP]
 
 // ++++++++++++++++++++++++++++++++++++++++
@@ -33,8 +33,8 @@ D=A
 D=D+M   // D = RAM[LCL] + i
 
 @address
-M=D     
-A=M     // go to address stored in RAM[LCL] + i
+M=D     // address = RAM[LCL] + i
+A=M     // go to 'address'
 D=M     // D = RAM[address]
 
 @SP
