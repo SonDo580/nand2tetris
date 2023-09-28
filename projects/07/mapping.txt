@@ -1,0 +1,26 @@
+SP => refer to RAM[0] => point to stack segment (RAM[256] -> RAM[2047])
+LCL => refer to RAM[1] => point to local segment (method's local variables)
+ARG => refer to RAM[2] => point to argument segment (method's arguments)
+THIS => refer to RAM[3] => point to this segment (store current object's fields)
+THAT => refer to RAM[4] => point to that segment (store current array's elements)
+
+- local, argument, this, that are allocated dynamically to the RAM
+- accesing segment i = accesing RAM[*segmentPointer + i]
+
+constant segment: 
+- constant is not a "real segment"
+- there's only 'push constant i', no 'pop constant i'
+
+static segment: 
+- a fixed RAM block: RAM[16] -> RAM[255]
+- accesing static i within Foo.vm = accesing assembly variable Foo.i
+
+temp segment: 
+- a fixed, 8-entry RAM block: (RAM[5] -> RAM[12])
+- accesing temp i = accesing RAM[5 + i]
+
+pointer segment: 
+- fixed, mapped on RAM[3] and RAM[4]
+- keep track of the base address of 'this' and 'that' segment
+
+R13, R14, R15: general purpose registers
