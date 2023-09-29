@@ -9,7 +9,7 @@ D=A
 @i
 M=D     // initialize i = 4
 
-(Foo.main.init)
+(Foo.main$init)
 @SP
 A=M
 M=0    
@@ -20,5 +20,5 @@ M=M+1   // push 0 to the stack
 M=M-1
 D=M
 
-@Foo.main.init
+@Foo.main$init
 D;JNE   // stop when i == 0

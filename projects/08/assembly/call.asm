@@ -1,8 +1,8 @@
 // Implement: call Foo.mult 2
-// Context: we are in a function/method of class Foo
+// Context: we are in a function/method foo of class Foo
 
-// Save the return address label (Foo$ret.{index})
-@Foo$ret.1
+// Save the return address label (Foo.foo$ret.{index})
+@Foo.foo$ret.1
 D=A
 
 @SP
@@ -44,5 +44,5 @@ M=D
 @Foo.mult
 0;JMP
 
-// Inject the return address label: (Foo$ret.{index})
-(Foo$ret.1)
+// Inject the return address label: (Foo.foo$ret.{index})
+(Foo.foo$ret.1)
