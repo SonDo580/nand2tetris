@@ -22,10 +22,12 @@ M=M-1   // SP--
 A=M
 D=M     // D = return value
 @ARG
+A=M
 M=D     // *ARG = D = return value
 
 // Reposition SP
-D=A
+@ARG
+D=M
 @SP
 M=D+1   // SP = ARG + 1
 
