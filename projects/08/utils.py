@@ -15,6 +15,31 @@ load_D_with_A = "D=A\n"
 load_SP_to_A = "@SP\nA=M\n"
 unconditional_jump = "0;JMP\n"
 
+# Global variables
+comparison_label_count = 0
+current_function_name = ""
+function_label_count = 0
+
+
+# Generate Bootstrap code
+def init_pointer(label, value):
+    if value < 0:
+        create_temp = f"@{-value}\n" + "D=-A\n"
+    else:
+        create_temp = f"@{value}\n" + load_D_with_A
+    return create_temp + f"@{label}\n" + load_M_with_D
+
+
+def bootstrap():
+    init_SP = init_pointer("SP", 256)
+    init_LCL = init_pointer("LCL", -1)
+    init_ARG = init_pointer("ARG", -2)
+    init_THIS = init_pointer("THIS", -3)
+    init_THAT = init_pointer("THAT", -4)
+    call_sys_init = produce_call_asm("call Sys.init 0", "Sys$ret")
+    return init_SP + init_LCL + init_ARG + init_THIS + init_THAT + call_sys_init
+
+
 # Produce Hack assembly from Arithmetic/Logic command
 ARITHMETIC_LOGIC_OPERATIONS = {
     "add": "M=D+M",
@@ -253,17 +278,85 @@ D;JNE
 def produce_function_asm(line):
     words = line.split(" ")
     function_name = words[1]
-    num_args = words[2]
+    num_vars = int(words[2])
+
+    if num_vars == 0:
+        return f"({function_name})\n"
 
     return (
         f"({function_name})\n"
-        + set_iteration(num_args)
+        + set_iteration(num_vars)
         + init_local_variables(function_name)
     )
 
 
+# Produce Hack assembly from call command
+push_D_to_stack = f"""@SP
+A=M
+M=D
+@SP
+M=M+1
+"""
+
+reposition_LCL = f"""@SP
+D=M
+@LCL
+M=D    
+"""
+
+
+def reposition_arg(num_args):
+    return f"""@{num_args}
+D=A
+@5
+D=D+A   
+@SP
+D=M-D
+@ARG
+M=D    
+"""
+
+
+def save_segment_pointer(label):
+    return f"@{label}\n" + load_D_with_M + push_D_to_stack
+
+
+def produce_call_asm(line, return_label):
+    words = line.split(" ")
+    function_name = words[1]
+    num_args = words[2]
+
+    save_return_address = f"@{return_label}\n" + load_D_with_A + push_D_to_stack
+    save_LCL = save_segment_pointer("LCL")
+    save_ARG = save_segment_pointer("ARG")
+    save_THIS = save_segment_pointer("THIS")
+    save_THAT = save_segment_pointer("THAT")
+    reposition_ARG = reposition_arg(num_args)
+    execute_function = f"@{function_name}\n" + unconditional_jump
+    inject_return_label = f"({return_label})\n"
+
+    return (
+        save_return_address
+        + save_LCL
+        + save_ARG
+        + save_THIS
+        + save_THAT
+        + reposition_ARG
+        + reposition_LCL
+        + execute_function
+        + inject_return_label
+    )
+
+
 # Produce Hack assembly from function-related command
+def get_return_label(function_name, label_count):
+    return f"{function_name}$ret.{label_count}"
+
+
 def function_commands_to_asm(line):
+    global current_function_name
+    global function_label_count
+
     words = line.split(" ")
     command = words[0]
 
@@ -271,14 +364,19 @@ def function_commands_to_asm(line):
         return produce_return_asm()
 
     if command == "function":
+        current_function_name = words[1]
+        function_label_count = 0  # reset label index
         return produce_function_asm(line)
+
+    if command == "call":
+        function_label_count += 1
+        return_label = get_return_label(current_function_name, function_label_count)
+        return produce_call_asm(line, return_label)
 
 
 # Produce Hack assembly from a VM command
-comparison_label_count = 0
-
-
 def to_asm(line, name_space):
+    global comparison_label_count
     words = line.split(" ")
     command = words[0]
 
@@ -289,7 +387,6 @@ def to_asm(line, name_space):
         return arithmetic_logic_to_asm(command)
 
     if command in COMPARISON_COMMANDS:
-        global comparison_label_count
         comparison_label_count += 1
         return comparison_to_asm(command, comparison_label_count)
 
