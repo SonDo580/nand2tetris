@@ -33,6 +33,22 @@ class Array2D {
         return this;
     }
 
+    /** Dispose this 2D array */
+    method void dispose() {
+        var int i;
+
+        // Iterate through each row and dispose it
+        let i = 0;
+        while (i < size) {
+            do arr[i].dispose();
+            let i = i + 1;
+        }
+
+        // Dispose the array of rows
+        do arr.dispose();
+        return;
+    }
+
     /** Set value at row i and column j */
     method void set(int i, int j, string value) {
         // Assume valid input
