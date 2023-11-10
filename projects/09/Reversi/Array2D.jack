@@ -10,7 +10,7 @@ class Array2D {
         var Array row;
 
         let size = Asize;
-        let arr = Array.new(size)
+        let arr = Array.new(size);
 
         let i = 0;
         while (i < size) {
