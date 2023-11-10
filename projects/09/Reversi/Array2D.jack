@@ -7,7 +7,6 @@ class Array2D {
     /** Construct a 2D array with the same width and height */
     constructor Array2D new(int Asize) {
         var int i, j;
-        var Array row;
 
         let size = Asize;
         let arr = Array.new(size);
@@ -18,13 +17,12 @@ class Array2D {
             let i = i + 1;
         }
 
-        // Initialize with empty string
+        // Initialize with empty (-1)
         let i = 0;
         while (i < size) {
             let j = 0;
             while (j < size) {
-                let row = arr[i];
-                let row[j] = "";
+                do set(i, j, -1);
                 let j = j + 1;
             }
             let i = i + 1;
@@ -52,7 +50,7 @@ class Array2D {
     }
 
     /** Set value at row i and column j */
-    method void set(int i, int j, string value) {
+    method void set(int i, int j, int value) {
         // Assume valid input
         var Array row;
         let row = arr[i];
@@ -61,7 +59,7 @@ class Array2D {
     }
 
     /** Get value at row i and column j */
-    method string get(int i, int j) {
+    method int get(int i, int j) {
         // Assume valid input
         var Array row;
         let row = arr[i];
