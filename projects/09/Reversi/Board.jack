@@ -1,0 +1,110 @@
+class Board {
+  field int size; // number of cells per side
+  field int cellWidth; // the width of a cell
+  field int x, y; // top-left corner coordinate of the board
+  field Array2D content;  // content of the board
+
+  /** Construct a new board with the given size */
+  constructor Board new(int Asize) {
+    let size = Asize; // size is an even number
+    let content = Array2D.new(size);
+    let x = 20;
+    let y = 10;
+    let cellWidth = (256 - (2*y)) / size;
+
+    do initilize();
+    do draw();
+    return this;
+  }
+
+  /** Initilize the board with 4 tiles at the center */
+  method void initilize() {
+    var int i;
+    let i = (size / 2) - 1;
+    do content.set(i, i, 0);      // black
+    do content.set(i, i+1, 1);    // white
+    do content.set(i+1, i, 1);    // white
+    do content.set(i+1, i+1, 0);  // black
+    return;
+  }
+
+  /** Dispose this board */
+  method void dispose() {
+    do content.dispose();
+    do Memory.deAlloc(this);
+    return;
+  }
+
+  /** Draw the board on the screen */
+  method void draw() {
+    var int i;
+    do Screen.setColor(true);
+    
+    let i = 0;
+    while (~(i > size)) {
+      // Draw vertical lines
+      do Screen.drawLine(x + (i*cellWidth), y, x + (i*cellWidth), y + (size*cellWidth));
+      // Draw horizontal lines
+      do Screen.drawLine(x, y + (i*cellWidth), x + (size*cellWidth), y + (i*cellWidth));
+      let i = i + 1;
+    }
+
+    // Draw the tiles
+    do drawTiles();
+    return;
+  }
+
+  /** Draw all tiles on the screen */
+  method void drawTiles() {
+    var int i, j;
+    var int tile;
+    
+    let i = 0;
+    while (i < size) {
+      let j = 0;
+      while (j < size) {
+        let tile = content.get(i, j);
+        if (~(tile = -1)) { // not empty
+          do drawTile(i, j, tile);
+        }
+        let j = j + 1;
+      }
+      let i = i + 1;
+    }
+    return;
+  }
+
+  /** Draw a tile on the screen */
+  method void drawTile(int row, int col, int tile) {
+    var int centerX, centerY;
+    let centerX = getCenterX(col);
+    let centerY = getCenterY(row);
+
+    do Screen.setColor(true);
+    do Screen.drawCircle(centerX, centerY, (cellWidth / 2) - 4);
+
+    if (tile = 1) { // white
+      do Screen.setColor(false);
+      do Screen.drawCircle(centerX, centerY, (cellWidth / 2) - 6);
+    }
+    return;
+  }
+
+  /** Get the tile center x-coordinate */
+  method int getCenterX(int col) {
+    return x + (col * cellWidth) + (cellWidth / 2);
+  }
+
+  /** Get the tile center y-coordinate */
+  method int getCenterY(int row) {
+    return y + (row * cellWidth) + (cellWidth / 2);
+  }
+
+
+  /** Erase the board from the screen */
+  method void erase() {
+    do Screen.setColor(false);
+    do Screen.drawRectangle(x, y, x + (size*cellWidth), y + (size*cellWidth));
+    return;
+  }
+}

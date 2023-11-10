@@ -1,0 +1,21 @@
+class Game {
+    field Board board;
+
+    /** Construct a new Game */
+    constructor Game new() {
+      let board = Board.new(8); // construct a 8x8 board
+      return this;
+    }
+
+    /** Dispose this game object */
+    method void dispose() {
+        do board.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    /** Run game: check for move and update board */
+    method void run() {
+        return;
+    }
+}
