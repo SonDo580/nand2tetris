@@ -36,11 +36,13 @@ class Array2D {
     /** Dispose this 2D array */
     method void dispose() {
         var int i;
+        var Array row;
 
         // Iterate through each row and dispose it
         let i = 0;
         while (i < size) {
-            do arr[i].dispose();
+            let row = arr[i]; 
+            do row.dispose();
             let i = i + 1;
         }
 
