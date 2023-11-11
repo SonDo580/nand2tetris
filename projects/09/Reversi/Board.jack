@@ -4,16 +4,18 @@ class Board {
   field int x, y; // top-left corner coordinate of the board
   field Array2D content;  // content of the board
   field int currentRow, currentCol; // row and column of the select box
+  field Array2D directions; // store 8 directions for checking
 
   /** Construct a new board with the given size */
   constructor Board new(int Asize) {
-    let size = Asize; // size is an even number
-    let content = Array2D.new(size);
+    let size = Asize;
+    let content = Array2D.new(size, size);
     let x = 20;
     let y = 10;
     let cellWidth = (256 - (2*y)) / size;
     let currentRow = 0;
     let currentCol = 0;
+    do setDirections();
     do initilize();
     do draw();
     return this;
@@ -30,9 +32,44 @@ class Board {
     return;
   }
 
+  /** Initialize directions array 
+    [
+      [0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, -1], [-1, 1], [1, 1]
+    ]
+  */
+  method void setDirections() {
+    let directions = Array2D.new(2, 8);
+    // up
+    do directions.set(0, 0, 0);
+    do directions.set(0, 1, -1);
+    // down
+    do directions.set(1, 0, 0);
+    do directions.set(1, 1, 1);
+    // left
+    do directions.set(2, 0, -1);
+    do directions.set(2, 1, 0);
+    // right
+    do directions.set(3, 0, 1);
+    do directions.set(3, 1, 0);
+    // up-left
+    do directions.set(4, 0, -1);
+    do directions.set(4, 1, -1);
+    // up-right
+    do directions.set(5, 0, 1);
+    do directions.set(5, 1, -1);
+    // down-left
+    do directions.set(6, 0, -1);
+    do directions.set(6, 1, 1);
+    // down-right
+    do directions.set(7, 0, 1);
+    do directions.set(7, 1, 1);
+    return;
+  }
+
   /** Dispose this board */
   method void dispose() {
     do content.dispose();
+    do directions.dispose();
     do Memory.deAlloc(this);
     return;
   }
@@ -64,6 +101,15 @@ class Board {
     return;
   }
 
+  /** Get opposing tile */
+  method int getOtherTile(int tile) {
+    if (tile = 1) {
+      return 0;   // tile: white -> otherTile: black
+    } else {
+      return 1;   // tile: black -> otherTile: white
+    }
+  }
+
   /** Select a cell */
   method boolean selectCell(int tile) {
     // Only allow if current cell is empty
@@ -79,15 +125,6 @@ class Board {
     return true;
   }
 
-  /** Get opposing tile */
-  method int getOtherTile(int tile) {
-    if (tile = 1) {
-      return 0;   // tile: white -> otherTile: black
-    } else {
-      return 1;   // tile: black -> otherTile: white
-    }
-  }
-
   /** Update board after each move */
   method void update(int row, int col, int tile) {
     var int otherTile;
@@ -100,9 +137,68 @@ class Board {
     return;
   }
 
-  /** Flip otherTiles that are between 2 tiles */
-  method void flipTiles(int row, int col, int tile, int otherTile) {
-    // Check 8 directions from current cell
+  /** Check if we are still on the board */
+  method boolean onBoard(int row, int col) {
+    return (~(row < 0)) & (row < size) & (~(col < 0)) & (col < size);
+  }
+
+  /** Flip other tiles that are between 2 tiles */
+  method void flipTiles(int startRow, int startCol, int tile, int otherTile) {
+    var int i;
+    var int row, col; // current row and col
+    var int rowChange, colChange; // how much to move
+    var int countOther; // count other tiles on the path
+    var boolean shouldFlip;  // there are tiles to flipped
+    var boolean shouldBreak;  // stop checking
+
+    let i = 0;
+    while (~(i = 8)) {
+      let rowChange = directions.get(i, 0);
+      let colChange = directions.get(i, 1);
+      let row = startRow + rowChange;
+      let col = startCol + colChange;
+      let shouldFlip = false;
+      let shouldBreak = false;
+      let countOther = 0;
+
+      // Keep going in this direction
+      while ((~shouldBreak) & onBoard(row, col)) {
+        if (content.get(row, col) = otherTile) {
+          let countOther = countOther + 1;
+          let row = row + rowChange;
+          let col = col + colChange; 
+        }
+
+        if (onBoard(row, col)) {
+          // Encounter an empty cell
+          if ((content.get(row, col) = -1)) {
+            let shouldBreak = true;
+          }
+
+          // Encounter another tile
+          if (content.get(row, col) = tile) {
+            let shouldBreak = true;
+            // Check if there are other tiles in between
+            if (countOther > 0) {
+              let shouldFlip = true;   
+            }
+          }
+        }
+      }
+
+      // If there are tiles to flipped
+      if (shouldFlip) {
+        // Go in the reverse direction to the original cell
+        // Flip all other tiles along the way
+        while (~((row = startRow) & (col = startCol))) {
+          let row = row - rowChange;
+          let col = col - colChange; 
+          do content.set(row, col, tile);
+        }
+      }
+
+      let i = i + 1;
+    }
     return;
   }
 
