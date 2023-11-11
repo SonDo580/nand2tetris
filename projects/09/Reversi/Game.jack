@@ -16,6 +16,36 @@ class Game {
 
     /** Run game: check for move and update board */
     method void run() {
+        var char key;
+        var int direction;
+        var boolean exit, reset;
+        let exit = false;
+        // let reset = false;
+        
+        while (~exit) {
+            let direction = 0;
+
+            // waits for a key to be pressed
+            while (key = 0) {
+                let key = Keyboard.keyPressed();
+            }
+
+            // if (key = 90) { let reset = true; }     // z key
+            if (key = 88) { let exit = true; }      // x key
+            if (key = 131) { let direction = 1; }   // up arrow
+            if (key = 133) { let direction = 2; }   // down arrow
+            if (key = 130) { let direction = 3; }   // left arrow
+            if (key = 132) { let direction = 4; }   // right arrow
+
+            if (~(direction = 0)) {
+                do board.moveBox(direction);
+            }
+
+            // waits for the key to be released
+            while (~(key = 0)) {
+                let key = Keyboard.keyPressed();
+            }
+        }
         return;
     }
 }

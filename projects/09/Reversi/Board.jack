@@ -3,6 +3,7 @@ class Board {
   field int cellWidth; // the width of a cell
   field int x, y; // top-left corner coordinate of the board
   field Array2D content;  // content of the board
+  field int currentRow, currentCol; // row and column of the select box
 
   /** Construct a new board with the given size */
   constructor Board new(int Asize) {
@@ -11,7 +12,8 @@ class Board {
     let x = 20;
     let y = 10;
     let cellWidth = (256 - (2*y)) / size;
-
+    let currentRow = 0;
+    let currentCol = 0;
     do initilize();
     do draw();
     return this;
@@ -35,12 +37,39 @@ class Board {
     return;
   }
 
+  /** Move the select box */
+  method void moveBox(int direction) {
+    // Erase the old box
+    do drawBox(true);
+
+    // Move up
+    if ((direction = 1) & (currentRow > 0)) {
+      let currentRow = currentRow - 1;
+    } 
+    // Move down
+    if ((direction = 2) & (currentRow < (size - 1))) {
+      let currentRow = currentRow + 1;
+    } 
+    // Move left
+    if ((direction = 3) & (currentCol > 0)) {
+      let currentCol = currentCol - 1;
+    } 
+    // Move right
+    if ((direction = 4) & (currentCol < (size - 1))) {
+      let currentCol = currentCol + 1;
+    }
+
+    // Draw the new box
+    do drawBox(false);
+    return;
+  }
+
   /** Draw the board on the screen */
   method void draw() {
     var int i;
+    let i = 0;
     do Screen.setColor(true);
     
-    let i = 0;
     while (~(i > size)) {
       // Draw vertical lines
       do Screen.drawLine(x + (i*cellWidth), y, x + (i*cellWidth), y + (size*cellWidth));
@@ -51,6 +80,8 @@ class Board {
 
     // Draw the tiles
     do drawTiles();
+    // Draw the selecting box;
+    do drawBox(false);
     return;
   }
 
@@ -58,8 +89,8 @@ class Board {
   method void drawTiles() {
     var int i, j;
     var int tile;
-    
     let i = 0;
+
     while (i < size) {
       let j = 0;
       while (j < size) {
@@ -100,6 +131,24 @@ class Board {
     return y + (row * cellWidth) + (cellWidth / 2);
   }
 
+  /** Draw or erase the selecting box */
+  method void drawBox(boolean erase) {
+    var int x1, x2, y1, y2;
+    do Screen.setColor(erase);
+
+    // Calculate coordinates
+    let x1 = x + (currentCol * cellWidth);       // left
+    let x2 = x + ((currentCol + 1) * cellWidth); // right
+    let y1 = y + (currentRow * cellWidth);       // top
+    let y2 = y + ((currentRow + 1) * cellWidth); // bottom
+
+    // Draw the box sides
+    do Screen.drawLine(x1, y1, x1, y2); // left
+    do Screen.drawLine(x2, y1, x2, y2); // right
+    do Screen.drawLine(x1, y1, x2, y1); // top
+    do Screen.drawLine(x1, y2, x1, y2); // bottom
+    return;
+  }
 
   /** Erase the board from the screen */
   method void erase() {
