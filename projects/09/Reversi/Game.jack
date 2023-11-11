@@ -1,12 +1,24 @@
 class Game {
-    field Board board;
+    field int size; // board size
+    field Board board;  // main game board
     field int turn; // current turn: white or black 
+    field int countTile; // number of tiles on the board
+    field int result; // store game result
 
     /** Construct a new Game */
     constructor Game new() {
-      let board = Board.new(8); // construct a 8x8 board
-      let turn = 1; // white tile goes first
-      return this;
+        do initialize();
+        return this;
+    }
+
+    /** Initialization */
+    method void initialize() {
+        let size = 8;
+        let board = Board.new(size); // construct a board
+        let turn = 1; // white tile goes first
+        let countTile = 0;
+        let result = -5; // this is just a random value
+        return;
     }
 
     /** Dispose this game object */
@@ -29,19 +41,19 @@ class Game {
         var boolean select, selectSuccess; // user selected a cell
         var boolean exit, reset;    // whether to reset or exit the game
         let exit = false;
-        // let reset = false;
         
         while (~exit) {
+            let reset = false;
             let direction = 0;
             let select = false;
             let selectSuccess = false;
 
-            // Waits for a key to be pressed
+            // Wait for a key to be pressed
             while (key = 0) {
                 let key = Keyboard.keyPressed();
             }
 
-            // if (key = 90) { let reset = true; }     // z
+            if (key = 90) { let reset = true; }     // z
             if (key = 88) { let exit = true; }      // x
             if (key = 32) { let select = true; }    // space
             if (key = 131) { let direction = 1; }   // up arrow
@@ -59,12 +71,27 @@ class Game {
                 let selectSuccess = board.selectCell(turn);
             }
 
-            // Swap turn if select successful
+            // Check if the board is full and get final result
             if (selectSuccess) {
+                let countTile = countTile + 1;
+                if (countTile = (size * size)) {
+                    let result = board.getResult();
+                }
+            }
+
+            // Swap turn if select successful and game is not end
+            if (selectSuccess & (result = -5)) {
                 do swapTurn();
             }
 
-            // Waits for the key to be released
+            // Reset the game
+            if (reset) {
+                do board.erase();
+                do board.dispose();
+                do initialize();
+            }
+
+            // Wait for the key to be released
             while (~(key = 0)) {
                 let key = Keyboard.keyPressed();
             }
