@@ -16,8 +16,10 @@ class Game {
         let size = 8;
         let board = Board.new(size); // construct a board
         let turn = 1; // white tile goes first
-        let countTile = 0;
+        let countTile = 4;  // 4 initial tiles
         let result = -5; // this is just a random value
+        do printInstructions();
+        do showTurn();
         return;
     }
 
@@ -79,16 +81,23 @@ class Game {
                 }
             }
 
+            // Show result and reset game after 3 seconds
+            if (~(result = -5)) {
+                do showResult();
+                do Sys.wait(3000);
+                do Screen.clearScreen();
+                do resetGame();
+            }
+
             // Swap turn if select successful and game is not end
             if (selectSuccess & (result = -5)) {
                 do swapTurn();
+                do drawTile();
             }
 
             // Reset the game
             if (reset) {
-                do board.erase();
-                do board.dispose();
-                do initialize();
+                do resetGame();
             }
 
             // Wait for the key to be released
@@ -96,6 +105,68 @@ class Game {
                 let key = Keyboard.keyPressed();
             }
         }
+        return;
+    }
+
+    /** Reset current round */
+    method void resetGame() {
+        do board.erase();
+        do board.dispose();
+        do initialize();
+        return;
+    }
+
+    /** Print instructions */
+    method void printInstructions() {
+        do Output.moveCursor(2, 35);
+        do Output.printString("arrow keys: move");
+        do Output.moveCursor(4, 35);
+        do Output.printString("space: select a cell");
+        do Output.moveCursor(6, 35);
+        do Output.printString("z: reset the game");
+        do Output.moveCursor(8, 35);
+        do Output.printString("x: exit the game");
+        return;
+    }
+
+    /** Show current turn */
+    method void showTurn() {
+        do Output.moveCursor(11, 40);
+        do Output.printString("Turn: ");
+        do drawTile();
+        return;
+    }
+
+    /** Draw a tile */
+    method void drawTile() {
+        var int centerX, centerY;
+        let centerX = 380;
+        let centerY = 125;
+
+        do Screen.setColor(true);
+        do Screen.drawCircle(centerX, centerY, 10);
+
+        if (turn = 1) { // white
+            do Screen.setColor(false);
+            do Screen.drawCircle(centerX, centerY, 8);
+        }
+        return;
+    }
+
+    /** Show result */
+    method void showResult() {
+        do Output.moveCursor(14, 40);
+        if (result = 1) {
+            do Output.printString("White won!");
+        }
+        if (result = 0) {
+            do Output.printString("Black won!");
+        }
+        if (result = -1) {
+            do Output.printString("Tie!");
+        }
+        do Output.moveCursor(16, 35);
+        do Output.printString("Reset in 3 seconds...");
         return;
     }
 }
