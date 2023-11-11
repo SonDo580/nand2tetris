@@ -64,6 +64,48 @@ class Board {
     return;
   }
 
+  /** Select a cell */
+  method boolean selectCell(int tile) {
+    // Only allow if current cell is empty
+    if (~(content.get(currentRow, currentCol) = -1)) { 
+      return false;
+    }
+
+    // Update board
+    do update(currentRow, currentCol, tile);
+    // Erase and redraw board
+    do erase();
+    do draw();
+    return true;
+  }
+
+  /** Get opposing tile */
+  method int getOtherTile(int tile) {
+    if (tile = 1) {
+      return 0;   // tile: white -> otherTile: black
+    } else {
+      return 1;   // tile: black -> otherTile: white
+    }
+  }
+
+  /** Update board after each move */
+  method void update(int row, int col, int tile) {
+    var int otherTile;
+    let otherTile = getOtherTile(tile);
+
+    // Place the tile at current cell
+    do content.set(row, col, tile);
+    // Flip the opposing tiles
+    do flipTiles(row, col, tile, otherTile);
+    return;
+  }
+
+  /** Flip otherTiles that are between 2 tiles */
+  method void flipTiles(int row, int col, int tile, int otherTile) {
+    // Check 8 directions from current cell
+    return;
+  }
+
   /** Draw the board on the screen */
   method void draw() {
     var int i;

@@ -1,9 +1,11 @@
 class Game {
     field Board board;
+    field int turn; // current turn: white or black 
 
     /** Construct a new Game */
     constructor Game new() {
       let board = Board.new(8); // construct a 8x8 board
+      let turn = 1; // white tile goes first
       return this;
     }
 
@@ -14,34 +16,55 @@ class Game {
         return;
     }
 
+    /** Swap turn */
+    method void swapTurn() {
+        let turn = board.getOtherTile(turn);
+        return;
+    }
+
     /** Run game: check for move and update board */
     method void run() {
-        var char key;
-        var int direction;
-        var boolean exit, reset;
+        var char key;   // store current key pressed
+        var int direction;  // select box moving direction 
+        var boolean select, selectSuccess; // user selected a cell
+        var boolean exit, reset;    // whether to reset or exit the game
         let exit = false;
         // let reset = false;
         
         while (~exit) {
             let direction = 0;
+            let select = false;
+            let selectSuccess = false;
 
-            // waits for a key to be pressed
+            // Waits for a key to be pressed
             while (key = 0) {
                 let key = Keyboard.keyPressed();
             }
 
-            // if (key = 90) { let reset = true; }     // z key
-            if (key = 88) { let exit = true; }      // x key
+            // if (key = 90) { let reset = true; }     // z
+            if (key = 88) { let exit = true; }      // x
+            if (key = 32) { let select = true; }    // space
             if (key = 131) { let direction = 1; }   // up arrow
             if (key = 133) { let direction = 2; }   // down arrow
             if (key = 130) { let direction = 3; }   // left arrow
             if (key = 132) { let direction = 4; }   // right arrow
 
+            // Move the select box
             if (~(direction = 0)) {
                 do board.moveBox(direction);
             }
 
-            // waits for the key to be released
+            // Select current cell
+            if (select) {
+                let selectSuccess = board.selectCell(turn);
+            }
+
+            // Swap turn if select successful
+            if (selectSuccess) {
+                do swapTurn();
+            }
+
+            // Waits for the key to be released
             while (~(key = 0)) {
                 let key = Keyboard.keyPressed();
             }
