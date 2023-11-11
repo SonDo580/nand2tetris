@@ -202,6 +202,36 @@ class Board {
     return;
   }
 
+  /** Get final result */
+  method int getResult() {
+    var int i, j;
+    var int whiteCount, blackCount;
+    let whiteCount = 0;
+    let blackCount = 0;
+
+    let i = 0;
+    while (i < size) {
+      let j = 0;
+      while (j < size) {
+          if (content.get(i, j) = 0) {
+            let blackCount = blackCount + 1;
+          } else {
+            let whiteCount = whiteCount + 1;
+          }
+          let j = j + 1;
+      }
+      let i = i + 1;
+    }
+
+    if (whiteCount > blackCount) {
+      return 1; // white won
+    }
+    if (whiteCount < blackCount) {
+      return 0; // black won
+    }
+    return -1;  // tie
+  }
+
   /** Draw the board on the screen */
   method void draw() {
     var int i;
