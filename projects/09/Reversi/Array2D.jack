@@ -1,27 +1,27 @@
 /** Helper class for representing the board content */
 
 class Array2D {
-    field int size;
+    field int width, height;
     field Array arr;
 
-    /** Construct a 2D array with the same width and height */
-    constructor Array2D new(int Asize) {
+    /** Construct a 2D array with the given size */
+    constructor Array2D new(int Awidth, int Aheight) {
         var int i, j;
-
-        let size = Asize;
-        let arr = Array.new(size);
+        let width = Awidth;
+        let height = Aheight;
+        let arr = Array.new(height);
 
         let i = 0;
-        while (i < size) {
-            let arr[i] = Array.new(size);
+        while (i < height) {
+            let arr[i] = Array.new(width);
             let i = i + 1;
         }
 
         // Initialize with empty (-1)
         let i = 0;
-        while (i < size) {
+        while (i < height) {
             let j = 0;
-            while (j < size) {
+            while (j < width) {
                 do set(i, j, -1);
                 let j = j + 1;
             }
@@ -38,7 +38,7 @@ class Array2D {
 
         // Iterate through each row and dispose it
         let i = 0;
-        while (i < size) {
+        while (i < height) {
             let row = arr[i]; 
             do row.dispose();
             let i = i + 1;
