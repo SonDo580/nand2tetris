@@ -308,13 +308,13 @@ class Board {
     let x1 = x + (currentCol * cellWidth);       // left
     let x2 = x + ((currentCol + 1) * cellWidth); // right
     let y1 = y + (currentRow * cellWidth);       // top
-    let y2 = y + ((currentRow + 1) * cellWidth); // bottom
+    let y2 = y + ((currentRow + 1) * cellWidth); // bottom 
 
-    // Draw the box sides
-    do Screen.drawLine(x1, y1, x1, y2); // left
-    do Screen.drawLine(x2, y1, x2, y2); // right
-    do Screen.drawLine(x1, y1, x2, y1); // top
-    do Screen.drawLine(x1, y2, x1, y2); // bottom
+    // Draw a short line around each side's midpoint
+    do Screen.drawLine(x1, ((y1+y2)/2)-1, x1, ((y1+y2)/2)+1); // left
+    do Screen.drawLine(x2, ((y1+y2)/2)-1, x2, ((y1+y2)/2)+1); // right
+    do Screen.drawLine(((x1+x2)/2)-1, y1, ((x1+x2)/2)+1, y1); // top
+    do Screen.drawLine(((x1+x2)/2)-1, y2, ((x1+x2)/2)+1, y2); // bottom
     return;
   }
 
