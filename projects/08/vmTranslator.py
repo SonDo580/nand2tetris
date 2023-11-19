@@ -9,13 +9,13 @@ def get_vm_files(path):
 
     for x in dir_list:
         if x.endswith(".vm"):
-            vm_files.append(f"{path}/{x}")
+            vm_files.append(os.path.join(path, x))
 
     return vm_files
 
 
 def get_fout_name(path):
-    program_name = path.rstrip("/").split("/")[-1]
+    program_name = (os.path.split(path)[0]).split(os.sep)[-1]
     return os.path.join(path, f"{program_name}.asm")
 
 
@@ -24,7 +24,7 @@ def generate_output(fname, fout_handle):
     fhandle = open(fname)
 
     # Get file name without extension (for static variables)
-    name_space = fname.split("/")[-1][:-3]  # get rid of '.vm' part
+    name_space = (os.path.splitext(fname)[0]).split(os.sep)[-1]
 
     for line in fhandle:
         # Remove whitespaces at 2 ends
