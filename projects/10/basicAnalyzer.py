@@ -1,3 +1,8 @@
+"""
+Basic implementation of the Jack Analyzer.
+Xxx.jack => output XxxT.xml
+"""
+
 import sys
 import os
 
@@ -6,7 +11,7 @@ from tokenizer import Tokenizer
 
 def tokenize(tokenizer, output_file):
     output_file.write(f"<tokens>\n")
-    token = tokenizer.next_token()  # Get the first token
+    token = tokenizer.next_token()
     while token is not None:
         token_type = tokenizer.token_type()
         output_file.write(f"<{token_type}> {token} </{token_type}>\n")
@@ -36,7 +41,7 @@ def process_file(input_path):
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python tokenizerTest.py <Jack file | Jack program>")
+        print("Usage: python basicAnalyzer.py <Jack file | Jack program>")
         sys.exit(1)
 
     path = sys.argv[1]
