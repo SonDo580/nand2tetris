@@ -1,7 +1,7 @@
 from constants import *
 
 
-class CompilationEngine:
+class XmlEngine:
     def __init__(self, tokenizer, output_file):
         self._tokenizer = tokenizer
         self._output_file = output_file

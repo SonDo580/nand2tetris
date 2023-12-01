@@ -7,7 +7,7 @@ import sys
 import os
 
 from tokenizer import Tokenizer
-from compilationEngine import CompilationEngine
+from compileEngine import CompileEngine
 
 
 def get_jack_files(dir_path):
@@ -27,7 +27,7 @@ def process_file(input_path):
     output_path = get_output_path(input_path)
     with open(input_path) as input_file, open(output_path, "w") as output_file:
         tokenizer = Tokenizer(input_file)
-        ce = CompilationEngine(tokenizer, output_file)
+        ce = CompileEngine(tokenizer, output_file)
         ce.compile()
 
 
