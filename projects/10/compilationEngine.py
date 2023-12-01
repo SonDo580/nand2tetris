@@ -181,9 +181,8 @@ class CompilationEngine:
         self.__outputXML()
         self._tokenizer.advance()
 
-        # TODO: handle arr[expression]
-        # if self._tokenizer.current_token() == "[":
-        #     self.__process("[")
+        if self._tokenizer.current_token() == "[":
+            self.__compileArrayAccess()
 
         self.__process("=")
         self.__compileExpression()
@@ -233,17 +232,19 @@ class CompilationEngine:
         """
         self.__outputTag("doStatement")
         self.__process("do")
+
+        self.__outputXML()
+        self._tokenizer.advance()
         self.__compileSubroutineCall()
+
         self.__process(";")
         self.__outputTag("doStatement", False)
 
     def __compileSubroutineCall(self):
         """
-        Compile a subroutine call
+        Compile a subroutine call: func() / obj.func() / Class.func()
+        Handle calling part: .func() / func()
         """
-        self.__outputXML()
-        self._tokenizer.advance()
-
         if self._tokenizer.current_token() == ".":
             self.__process(".")
             self.__outputXML()
@@ -266,12 +267,26 @@ class CompilationEngine:
         self.__process(";")
         self.__outputTag("returnStatement", False)
 
+    def __compileArrayAccess(self):
+        """
+        Compile array access: arr[expression]
+        Handle indexing part: [expression]
+        """
+        self.__process("[")
+        self.__compileExpression()
+        self.__process("]")
+
     def __compileExpression(self):
         """
         Compile an expression
         """
         self.__outputTag("expression")
         self.__compileTerm()
+
+        while self._tokenizer.current_token() in BINARY_OPS:
+            self.__process(self._tokenizer.current_token())
+            self.__compileTerm()
+
         self.__outputTag("expression", False)
 
     def __compileTerm(self):
@@ -279,9 +294,31 @@ class CompilationEngine:
         Compile a term
         """
         self.__outputTag("term")
+        token = self._tokenizer.current_token()
 
-        self.__outputXML()
-        self._tokenizer.advance()
+        # Handle group
+        if token == "(":
+            self.__process("(")
+            self.__compileExpression()
+            self.__process(")")
+
+        # Handle unary op
+        elif token in UNARY_OPS:
+            self.__process(token)
+            self.__compileTerm()
+
+        else:
+            # Other term types
+            self.__outputXML()
+            self._tokenizer.advance()
+
+            token = self._tokenizer.current_token()
+            if token == "[":
+                # Handle array access
+                self.__compileArrayAccess()
+            elif token in [".", "("]:
+                # Handle subroutine call
+                self.__compileSubroutineCall()
 
         self.__outputTag("term", False)
 
@@ -293,17 +330,11 @@ class CompilationEngine:
         count_expression = 0
         self.__outputTag("expressionList")
 
-        while (
-            self._tokenizer.current_token() != ")"
-            or self._tokenizer.token_type() != SYMBOL
-        ):
+        while self._tokenizer.current_token() != ")":
             self.__compileExpression()
             count_expression += 1
 
-            if (
-                self._tokenizer.current_token() == ","
-                and self._tokenizer.token_type() == SYMBOL
-            ):
+            if self._tokenizer.current_token() == ",":
                 self.__process(",")
 
         self.__outputTag("expressionList", False)
