@@ -8,7 +8,6 @@ import sys
 import os
 from argparse import ArgumentParser
 
-from tokenizer import Tokenizer
 from xmlEngine import XmlEngine
 from compileEngine import CompileEngine
 
@@ -31,12 +30,12 @@ def get_output_path(input_path, generate_xml):
 def process_file(input_path, generate_xml):
     output_path = get_output_path(input_path, generate_xml)
     with open(input_path) as input_file, open(output_path, "w") as output_file:
-        tokenizer = Tokenizer(input_file)
-        if generate_xml:
-            ce = XmlEngine(tokenizer, output_file)
-        else:
-            ce = CompileEngine(tokenizer, output_file)
-        ce.compile()
+        engine = (
+            XmlEngine(input_file, output_file)
+            if generate_xml
+            else CompileEngine(input_file, output_file)
+        )
+        engine.compile()
 
 
 def main():
