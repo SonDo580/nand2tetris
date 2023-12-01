@@ -55,3 +55,19 @@ SYMBOLS = {
     "=",
     "~",
 }
+
+# Unary operators
+UNARY_OPS = {"-", "~"}
+
+# Binary operators
+BINARY_OPS = {
+    "+",
+    "-",
+    "*",
+    "/",
+    ESCAPED["&"],
+    "|",
+    ESCAPED["<"],
+    ESCAPED[">"],
+    "=",
+}
