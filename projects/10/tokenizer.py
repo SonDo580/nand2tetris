@@ -48,7 +48,7 @@ class Tokenizer:
         self._num_chars = 0 if self._line is None else len(line)
         self._char_index = 0
 
-    def __advance(self):
+    def advance(self):
         """
         Set current token to the next token from the input.
         Assign token type to current token.
@@ -111,16 +111,22 @@ class Tokenizer:
             elif re.match("^\d+$", self._token):
                 self._token_type = INT_CONST
 
-    def next_token(self):
+    def current_token(self):
         """
-        Return the next token from the input.
+        Return the current token
         """
-        self.__advance()
         if self._token is None:
             return None
         if self._token_type == STR_CONST:
             return self._token[1:-1]  # Remove the quotes
         return self._token
+
+    def next_token(self):
+        """
+        Return the next token from the input
+        """
+        self.advance()
+        return self.current_token()
 
     def token_type(self):
         """
