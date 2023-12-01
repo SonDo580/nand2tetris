@@ -1,0 +1,328 @@
+from constants import *
+
+
+class CompilationEngine:
+    def __init__(self, tokenizer, output_file):
+        self._tokenizer = tokenizer
+        self._output_file = output_file
+        self._indent = 0  # indentation level
+
+    def compile(self):
+        """
+        Start compiling the input file
+        """
+        self._tokenizer.advance()  # Get the first token
+        self.__compileClass()
+
+    def __outputXML(self):
+        """
+        Generate XML for current token
+        """
+        token = self._tokenizer.current_token()
+        token_type = self._tokenizer.token_type()
+        indentation = " " * 2 * self._indent
+        self._output_file.write(
+            f"{indentation}<{token_type}> {token} </{token_type}>\n"
+        )
+
+    def __outputTag(self, tagName, isOpen=True):
+        """
+        Generate XML for opening and closing tags.
+        Also update indentation level.
+        """
+        if isOpen:
+            indentation = " " * 2 * self._indent
+            self._output_file.write(f"{indentation}<{tagName}>\n")
+            self._indent += 1
+        else:
+            self._indent -= 1
+            indentation = " " * 2 * self._indent
+            self._output_file.write(f"{indentation}</{tagName}>\n")
+
+    def __process(self, expected_token):
+        """
+        Handle current token, then advance to next token.
+        """
+        token = self._tokenizer.current_token()
+        token_type = self._tokenizer.token_type()
+        if token == expected_token and token_type in [SYMBOL, KEYWORD]:
+            self.__outputXML()
+        else:
+            raise SyntaxError
+        self._tokenizer.advance()
+
+    def __compileClass(self):
+        """
+        Compile a class
+        """
+        self.__outputTag("class")
+        self.__process("class")
+
+        # Print className
+        self.__outputXML()
+        self._tokenizer.advance()
+
+        self.__process("{")
+
+        while (
+            self._tokenizer.current_token() in ["field", "static"]
+            and self._tokenizer.token_type() == KEYWORD
+        ):
+            self.__compileClassVarDec()
+
+        while (
+            self._tokenizer.current_token() in ["constructor", "method", "function"]
+            and self._tokenizer.token_type() == KEYWORD
+        ):
+            self.__compileSubroutine()
+
+        self.__process("}")
+        self.__outputTag("class", False)
+
+    def __compileClassVarDec(self):
+        """
+        Compile a static variable declaration or a field declaration
+        """
+        self.__outputTag("classVarDec")
+
+        while (
+            self._tokenizer.current_token() != ";"
+            or self._tokenizer.token_type() != SYMBOL
+        ):
+            self.__outputXML()
+            self._tokenizer.advance()
+
+        self.__process(";")
+        self.__outputTag("classVarDec", False)
+
+    def __compileSubroutine(self):
+        """
+        Compile a method, function or constructor
+        """
+        self.__outputTag("subroutineDec")
+
+        while (
+            self._tokenizer.current_token() != "("
+            or self._tokenizer.token_type() != SYMBOL
+        ):
+            self.__outputXML()
+            self._tokenizer.advance()
+
+        self.__process("(")
+        self.__compileParameterList()
+        self.__process(")")
+
+        self.__compileSubroutineBody()
+        self.__outputTag("subroutineDec", False)
+
+    def __compileParameterList(self):
+        """
+        Compile a (possibly empty) parameter list. Not handle '(' and ')'
+        """
+        self.__outputTag("parameterList")
+
+        while (
+            self._tokenizer.current_token() != ")"
+            or self._tokenizer.token_type() != SYMBOL
+        ):
+            self.__outputXML()
+            self._tokenizer.advance()
+
+        self.__outputTag("parameterList", False)
+
+    def __compileSubroutineBody(self):
+        """
+        Compile a subroutine body
+        """
+        self.__outputTag("subroutineBody")
+        self.__process("{")
+
+        while (
+            self._tokenizer.current_token() == "var"
+            and self._tokenizer.token_type() == KEYWORD
+        ):
+            self.__compileVarDec()
+
+        self.__compileStatements()
+
+        self.__process("}")
+        self.__outputTag("subroutineBody", False)
+
+    def __compileVarDec(self):
+        """
+        Compile a var declaration
+        """
+        self.__outputTag("varDec")
+
+        while (
+            self._tokenizer.current_token() != ";"
+            or self._tokenizer.token_type() != SYMBOL
+        ):
+            self.__outputXML()
+            self._tokenizer.advance()
+
+        self.__process(";")
+        self.__outputTag("varDec", False)
+
+    def __compileStatements(self):
+        """
+        Compile a sequence of statements. Not handle '{' and '}'
+        """
+        self.__outputTag("statements")
+
+        while (
+            self._tokenizer.token_type() == KEYWORD
+            and self._tokenizer.current_token()
+            in ["let", "if", "while", "do", "return"]
+        ):
+            token = self._tokenizer.current_token()
+            if token == "let":
+                self.__compileLet()
+            elif token == "if":
+                self.__compileIf()
+            elif token == "while":
+                self.__compileWhile()
+            elif token == "do":
+                self.__compileDo()
+            elif token == "return":
+                self.__compileReturn()
+
+        self.__outputTag("statements", False)
+
+    def __compileLet(self):
+        """
+        Compile a 'let' statement
+        """
+        self.__outputTag("letStatement")
+        self.__process("let")
+
+        # TODO: handle array access
+        self.__outputXML()
+        self._tokenizer.advance()
+
+        self.__process("=")
+        self.__compileExpression()
+
+        self.__process(";")
+        self.__outputTag("letStatement", False)
+
+    def __compileIf(self):
+        """
+        Compile an 'if' statement, possibly with a trailing 'else' clause
+        """
+        self.__outputTag("ifStatement")
+
+        self.__process("if")
+        self.__process("(")
+        self.__compileExpression()
+        self.__process(")")
+        self.__process("{")
+        self.__compileStatements()
+        self.__process("}")
+
+        if (
+            self._tokenizer.current_token() == "else"
+            and self._tokenizer.token_type() == KEYWORD
+        ):
+            self.__process("else")
+            self.__process("{")
+            self.__compileStatements()
+            self.__process("}")
+
+        self.__outputTag("ifStatement", False)
+
+    def __compileWhile(self):
+        """
+        Compile a 'while' statement
+        """
+        self.__outputTag("whileStatement")
+        self.__process("while")
+        self.__process("(")
+        self.__compileExpression()
+        self.__process(")")
+        self.__process("{")
+        self.__compileStatements()
+        self.__process("}")
+        self.__outputTag("whileStatement", False)
+
+    def __compileDo(self):
+        """
+        Compile a 'do' statement
+        """
+        self.__outputTag("doStatement")
+        self.__process("do")
+        self.__compileSubroutineCall()
+        self.__process(";")
+        self.__outputTag("doStatement", False)
+
+    def __compileSubroutineCall(self):
+        """
+        Compile a subroutine call
+        """
+        self.__outputXML()
+        self._tokenizer.advance()
+
+        if self._tokenizer.current_token() == ".":
+            self.__process(".")
+            self.__outputXML()
+            self._tokenizer.advance()
+
+        self.__process("(")
+        self.__compileExpressionList()
+        self.__process(")")
+
+    def __compileReturn(self):
+        """
+        Compile a 'return' statement
+        """
+        self.__outputTag("returnStatement")
+        self.__process("return")
+
+        if self._tokenizer.current_token() != ";":
+            self.__compileExpression()
+
+        self.__process(";")
+        self.__outputTag("returnStatement", False)
+
+    def __compileExpression(self):
+        """
+        Compile an expression
+        """
+        self.__outputTag("expression")
+        self.__compileTerm()
+        self.__outputTag("expression", False)
+
+    def __compileTerm(self):
+        """
+        Compile a term
+        """
+        self.__outputTag("term")
+
+        self.__outputXML()
+        self._tokenizer.advance()
+
+        self.__outputTag("term", False)
+
+    def __compileExpressionList(self):
+        """
+        Compile a (possibly empty) comma-separated list of expression.
+        Return the number of expressions in the list.
+        """
+        count_expression = 0
+        self.__outputTag("expressionList")
+
+        while (
+            self._tokenizer.current_token() != ")"
+            or self._tokenizer.token_type() != SYMBOL
+        ):
+            self.__compileExpression()
+            count_expression += 1
+
+            if (
+                self._tokenizer.current_token() == ","
+                and self._tokenizer.token_type() == SYMBOL
+            ):
+                self.__process(",")
+
+        self.__outputTag("expressionList", False)
+        return count_expression
