@@ -1,14 +1,11 @@
 """
 Complete implementation of the Jack Analyzer.
-Xxx.jack => output Xxx.xml or Xxx.vm 
-Default: output .vm file
+Xxx.jack => Xxx.vm 
 """
 
 import sys
 import os
-from argparse import ArgumentParser
 
-from xmlEngine import XmlEngine
 from compileEngine import CompileEngine
 
 
@@ -20,42 +17,30 @@ def get_jack_files(dir_path):
     return jack_files
 
 
-def get_output_path(input_path, generate_xml):
+def get_output_path(input_path):
     root, _ = os.path.splitext(input_path)
-    if generate_xml:
-        return f"xml{os.path.sep}{root}.xml"
     return f"output{os.path.sep}{root}.vm"
 
 
-def process_file(input_path, generate_xml):
-    output_path = get_output_path(input_path, generate_xml)
+def process_file(input_path):
+    output_path = get_output_path(input_path)
     with open(input_path) as input_file, open(output_path, "w") as output_file:
-        engine = (
-            XmlEngine(input_file, output_file)
-            if generate_xml
-            else CompileEngine(input_file, output_file)
-        )
-        engine.compile()
+        ce = CompileEngine(input_file, output_file)
+        ce.compile()
 
 
 def main():
-    parser = ArgumentParser(description="Compile Jack program into VM program")
-    parser.add_argument(
-        "jack_program", help="path to Jack file or Jack program directory"
-    )
-    parser.add_argument(
-        "-x", "--xml", action="store_true", help="only generate XML output"
-    )
+    if len(sys.argv) != 2:
+        print("Usage: python jackCompiler.py <jack file | jack program>")
+        sys.exit(1)
 
-    args = parser.parse_args()
-    path = args.jack_program
-    generate_xml = args.xml
+    path = sys.argv[1]
 
     if os.path.isfile(path):
         if not path.endswith(".jack"):
             print("Not a Jack file")
             sys.exit(1)
-        process_file(path, generate_xml)
+        process_file(path)
 
     elif os.path.isdir(path):
         jack_files = get_jack_files(path)
@@ -63,7 +48,7 @@ def main():
             print("Not a Jack program")
             sys.exit(1)
         for filepath in jack_files:
-            process_file(filepath, generate_xml)
+            process_file(filepath)
 
     else:
         print("File or folder not exist")
