@@ -121,13 +121,6 @@ class Tokenizer:
             return self._token[1:-1]  # Remove the quotes
         return self._token
 
-    def next_token(self):
-        """
-        Return the next token from the input
-        """
-        self.advance()
-        return self.current_token()
-
     def token_type(self):
         """
         Return the type of the current token
