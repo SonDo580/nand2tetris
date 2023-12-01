@@ -58,22 +58,16 @@ class CompilationEngine:
         self.__outputTag("class")
         self.__process("class")
 
-        # Print className
+        # className
         self.__outputXML()
         self._tokenizer.advance()
 
         self.__process("{")
 
-        while (
-            self._tokenizer.current_token() in ["field", "static"]
-            and self._tokenizer.token_type() == KEYWORD
-        ):
+        while self._tokenizer.current_token() in ["field", "static"]:
             self.__compileClassVarDec()
 
-        while (
-            self._tokenizer.current_token() in ["constructor", "method", "function"]
-            and self._tokenizer.token_type() == KEYWORD
-        ):
+        while self._tokenizer.current_token() in ["constructor", "method", "function"]:
             self.__compileSubroutine()
 
         self.__process("}")
@@ -84,11 +78,9 @@ class CompilationEngine:
         Compile a static variable declaration or a field declaration
         """
         self.__outputTag("classVarDec")
+        self.__process(self._tokenizer.current_token())  # field / static
 
-        while (
-            self._tokenizer.current_token() != ";"
-            or self._tokenizer.token_type() != SYMBOL
-        ):
+        while self._tokenizer.current_token() != ";":
             self.__outputXML()
             self._tokenizer.advance()
 
@@ -100,11 +92,11 @@ class CompilationEngine:
         Compile a method, function or constructor
         """
         self.__outputTag("subroutineDec")
+        self.__process(
+            self._tokenizer.current_token()
+        )  # constructor / method / function
 
-        while (
-            self._tokenizer.current_token() != "("
-            or self._tokenizer.token_type() != SYMBOL
-        ):
+        while self._tokenizer.current_token() != "(":
             self.__outputXML()
             self._tokenizer.advance()
 
@@ -121,10 +113,7 @@ class CompilationEngine:
         """
         self.__outputTag("parameterList")
 
-        while (
-            self._tokenizer.current_token() != ")"
-            or self._tokenizer.token_type() != SYMBOL
-        ):
+        while self._tokenizer.current_token() != ")":
             self.__outputXML()
             self._tokenizer.advance()
 
@@ -137,10 +126,7 @@ class CompilationEngine:
         self.__outputTag("subroutineBody")
         self.__process("{")
 
-        while (
-            self._tokenizer.current_token() == "var"
-            and self._tokenizer.token_type() == KEYWORD
-        ):
+        while self._tokenizer.current_token() == "var":
             self.__compileVarDec()
 
         self.__compileStatements()
@@ -153,11 +139,9 @@ class CompilationEngine:
         Compile a var declaration
         """
         self.__outputTag("varDec")
+        self.__process("var")
 
-        while (
-            self._tokenizer.current_token() != ";"
-            or self._tokenizer.token_type() != SYMBOL
-        ):
+        while self._tokenizer.current_token() != ";":
             self.__outputXML()
             self._tokenizer.advance()
 
@@ -170,11 +154,7 @@ class CompilationEngine:
         """
         self.__outputTag("statements")
 
-        while (
-            self._tokenizer.token_type() == KEYWORD
-            and self._tokenizer.current_token()
-            in ["let", "if", "while", "do", "return"]
-        ):
+        while True:
             token = self._tokenizer.current_token()
             if token == "let":
                 self.__compileLet()
@@ -186,6 +166,8 @@ class CompilationEngine:
                 self.__compileDo()
             elif token == "return":
                 self.__compileReturn()
+            else:
+                break
 
         self.__outputTag("statements", False)
 
@@ -196,9 +178,12 @@ class CompilationEngine:
         self.__outputTag("letStatement")
         self.__process("let")
 
-        # TODO: handle array access
         self.__outputXML()
         self._tokenizer.advance()
+
+        # TODO: handle arr[expression]
+        # if self._tokenizer.current_token() == "[":
+        #     self.__process("[")
 
         self.__process("=")
         self.__compileExpression()
@@ -220,10 +205,7 @@ class CompilationEngine:
         self.__compileStatements()
         self.__process("}")
 
-        if (
-            self._tokenizer.current_token() == "else"
-            and self._tokenizer.token_type() == KEYWORD
-        ):
+        if self._tokenizer.current_token() == "else":
             self.__process("else")
             self.__process("{")
             self.__compileStatements()
