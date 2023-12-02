@@ -48,3 +48,9 @@ class SymbolTable:
 
     def index(self, name):
         return self.__property(name, "index")
+
+    def var_count(self, kind):
+        """
+        Return the number of variables of the given kind
+        """
+        return self._index[kind] + 1
