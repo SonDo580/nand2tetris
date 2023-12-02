@@ -5,7 +5,7 @@ class SymbolTable:
     def __init__(self):
         self._class_symbols = {}
         self._subroutine_symbols = {}
-        self._index = {FIELD: 0, STATIC: 0, ARG: 0, VAR: 0}
+        self._index = {FIELD: -1, STATIC: -1, ARG: -1, VAR: -1}
 
     def reset(self):
         """
@@ -13,13 +13,14 @@ class SymbolTable:
         Should be called when starting a subroutine.
         """
         self._subroutine_symbols = {}
-        self._index[ARG] = 0
-        self._index[VAR] = 0
+        self._index[ARG] = -1
+        self._index[VAR] = -1
 
     def define(self, name, type, kind):
         """
         Add a new variable to the symbol table
         """
+        self._index[kind] += 1
         symbol = {"type": type, "kind": kind, "index": self._index[kind]}
         if kind in [FIELD, STATIC]:
             self._class_symbols[name] = symbol
@@ -27,7 +28,6 @@ class SymbolTable:
             self._subroutine_symbols[name] = symbol
         else:
             raise SyntaxError
-        self._index[kind] += 1
 
     def __property(self, name, prop):
         """
