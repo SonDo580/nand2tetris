@@ -1,5 +1,5 @@
 """
-Complete implementation of the Jack Analyzer.
+Complete implementation of the Jack Compiler.
 Xxx.jack => Xxx.vm 
 """
 
