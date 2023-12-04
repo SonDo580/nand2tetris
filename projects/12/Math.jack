@@ -8,18 +8,18 @@
  * Note: Jack compilers implement multiplication and division using OS method calls.
  */
 class Math {
-    static Array twoToTheIth;   // hold the value of 2^i (i = 0,...,15)
+    static Array twoPowers;   // hold the value of 2^i (i = 0,...,15)
 
     /** Initializes the library. */
     function void init() {
         var int i;
-        let twoToTheIth = Array.new(16);
-        let twoToTheIth[0] = 1;
+        let twoPowers = Array.new(16);
+        let twoPowers[0] = 1;
         let i = 1;
 
         while (i < 16) {
             // 2^i = 2 * 2^(i-1)
-            let twoToTheIth[i] = twoToTheIth[i - 1] + twoToTheIth[i - 1];
+            let twoPowers[i] = twoPowers[i - 1] + twoPowers[i - 1];
             let i = i + 1;
         }
         return;
@@ -27,7 +27,7 @@ class Math {
 
     /** Return true if the i-th bit of x is 1, false otherwise */
     function boolean bit(int x, int i) {
-        if ((x & twoToTheIth[i]) = 0) {
+        if ((x & twoPowers[i]) = 0) {
             return false;
         }
         return true;
@@ -106,10 +106,10 @@ class Math {
 
         while (~(j < 0)) {
             // (y + 2^j)^2
-            let next = y + twoToTheIth[j];
+            let next = y + twoPowers[j];
             let nextSquare = next * next;  
             if ((~(nextSquare > x)) & (nextSquare > 0)) {
-                let y = y + twoToTheIth[j];
+                let y = y + twoPowers[j];
             }
             let j = j - 1;
         }
