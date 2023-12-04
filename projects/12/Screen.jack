@@ -10,34 +10,280 @@
  * the screen is indexed (0,0).
  */
 class Screen {
+    static Array screen; // Screen array
+    static Array twoPowers;   // hold the value of 2^i (i = 0,...,15)
+    static Array masks;    // hold the mask up to i-th bit (ex: 0000 0111) 
+    static boolean color; // false (0): white, true (-1): black
 
     /** Initializes the Screen. */
     function void init() {
+        var int i;
+        let color = true;   // set color to black
+
+        // Initialize screen array
+        // Screen memory: 8192 registers (RAM 16384 -> RAM 24575)
+        let screen = 16384;
+
+        // Initialize 2^i array and the masks array
+        let twoPowers = Array.new(16);
+        let masks = Array.new(16);
+
+        let twoPowers[0] = 1;
+        let masks[0] = 1;
+
+        let i = 1;
+        while (i < 16) {
+            // 2^i = 2 * 2^(i-1)
+            let twoPowers[i] = twoPowers[i - 1] + twoPowers[i - 1];
+            // 0000 1111 = 0000 1000 + 0000 0111
+            let masks[i] = twoPowers[i] + masks[i - 1];
+            let i = i + 1;
+        }
+        return;
     }
 
     /** Erases the entire screen. */
     function void clearScreen() {
+        let color = false;   
+        do Screen.drawRectangle(0, 0, 511, 255);
+        return;
     }
 
     /** Sets the current color, to be used for all subsequent drawXXX commands.
      *  Black is represented by true, white by false. */
     function void setColor(boolean b) {
+        let color = b;
+        return;
     }
 
     /** Draws the (x,y) pixel, using the current color. */
     function void drawPixel(int x, int y) {
+        // x: 0 -> 511; y: 0 -> 255
+        var int address, value, temp;
+        let temp = x / 16;
+        let address = (32 * y) + temp; // 32y + x/16
+        let value = screen[address];
+        
+        // Set the (x % 16) bit of current register to color
+        if (color) { // black
+            let screen[address] = value | twoPowers[x - (temp * 16)];
+        } else { // white
+            let screen[address] = value & (~twoPowers[x - (temp * 16)]);
+        }
+        return;
+    }
+
+    /** Draws a horizontal line from (x1,y) to (x2,y). 
+        Try to draw 16 pixels at a time (special cases: start and end registers).
+        Calculate once and use across rows (for drawRectangle)
+    */
+    function void drawHorizontalLine(int y, int x1, int x2, int repeat) {
+        var int temp1, temp2, mask, address, lineIndex, i1, i2;
+        var int startAddress, startMask, endAddress, endMask;
+        let temp1 = 32 * y;
+
+        let temp2 = x1 / 16;
+        let startAddress = temp1 + temp2;
+        let i1 = x1 - (temp2 * 16);
+
+        let temp2 = x2 / 16;
+        let endAddress = temp1 + temp2; 
+        let i2 = x2 - (temp2 * 16);
+
+        if (startAddress = endAddress) {
+            let startMask = masks[i2] - masks[i1];
+            if (color) {
+                let screen[startAddress] = screen[startAddress] | startMask;
+            } else {
+                let screen[startAddress] = screen[startAddress] & (~startMask);
+            }
+            return;
+        }
+
+        if (i1 = 0) {
+            let startMask = 0;
+        } else {
+            let startMask = masks[i1 - 1];
+        }
+        if (color) {
+            let startMask = ~startMask;
+        }
+        
+        let endMask = masks[i2];
+        if (~color) {
+            let endMask = ~endMask;
+        }
+
+        let lineIndex = 0;
+        while (lineIndex < repeat) {
+            if (color) {
+                let screen[startAddress] = screen[startAddress] | startMask;
+                let screen[endAddress] = screen[endAddress] | endMask;
+            } else {
+                let screen[startAddress] = screen[startAddress] & startMask;
+                let screen[endAddress] = screen[endAddress] & endMask;
+            }
+
+            let address = startAddress + 1;
+            while (address < endAddress) {
+                let screen[address] = color;
+                let address = address + 1;
+            }
+
+            let lineIndex = lineIndex + 1;
+            let startAddress = startAddress + 32;
+            let endAddress = endAddress + 32;
+        }
+        
+        return;
+    }
+
+    /** Draws a vertical line from (x,y1) to (x,y2) with y1 < y2.
+        the next pixel will be right below current pixel.
+        So address = address + 32, and mask will be the same
+     */
+    function void drawVerticalLine(int x, int y1, int y2) {
+        var int address, temp, mask, y;
+        let temp = x / 16;
+        let mask = twoPowers[x - (temp * 16)];
+        if (~color) {
+            let mask = ~mask;
+        }
+        let y = y1;
+        let address = (32 * y1) + temp;
+
+        while (~(y > y2)) {
+            // Set the (x % 16) bit of current register to color
+            if (color) { // black
+                let screen[address] = screen[address] | mask;
+            } else { // white
+                let screen[address] = screen[address] & mask;
+            }
+            let y = y + 1;
+            let address = address + 32;
+        }
+        return;
+    }
+
+    /* To decide which direction to go, we compare the angles
+       tan(alpha) = dy / dx (fixed)
+       tan(beta) = b / a (change over time)
+       diff = b.dx - a.dy
+       try to make diff goes to 0 in every move)
+       If diff = 0, choose b direction (arbitrary)
+       a = a + 1 => diff = b.dx - a.dy - dy = prevDiff - dy
+       b = b + 1 => diff = b.dx + dx - a.dy = prevDiff + dx
+       In case y1 > y2, we need to move in -b direction. */
+
+    /** Draws a diagonal line from (x1,y1) to (x2,y2) when y1 < y2 */
+    function void drawNorthWestSouthEast(int x1, int y1, int x2, int y2) {
+        var int dx, dy;
+        var int a, b;   // current x, y offsets
+        var int diff;   // b.dx - a.dy
+
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+        let a = 0;
+        let b = 0;
+        let diff = 0;
+
+        while((~(a > dx)) & (~(b > dy))) {
+            do Screen.drawPixel(x1 + a, y1 + b);
+
+            // Decide which direction to go
+            if (diff > 0) {
+                let a = a + 1;
+                let diff = diff - dy;
+            } else {
+                let b = b + 1;
+                let diff = diff + dx;
+            }
+        }
+        return;
+    }
+
+    /** Draws a diagonal line from (x1,y1) to (x2,y2) when y1 > y2 */
+    function void drawSouthWestNorthEast(int x1, int y1, int x2, int y2) {
+        var int dx, dy;
+        var int a, b;   // current x, y offsets
+        var int diff;   // b.dx - a.dy
+
+        let dx = x2 - x1;
+        let dy = y1 - y2;
+        let a = 0;
+        let b = 0;
+        let diff = 0;
+
+        while((~(a > dx)) & (~(b > dy))) {
+            do Screen.drawPixel(x1 + a, y1 - b);
+
+            // Decide which direction to go
+            if (diff > 0) {
+                let a = a + 1;
+                let diff = diff - dy;
+            } else {
+                let b = b + 1;
+                let diff = diff + dx;
+            }
+        }
+        return;
     }
 
     /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
     function void drawLine(int x1, int y1, int x2, int y2) {
+        // Make sure the first end is on the left
+        if (x1 > x2) {
+            do Screen.drawLine(x2, y2, x1, y1);
+            return;
+        }
+
+        // Draw horizontal line
+        if (y1 = y2) {
+            do Screen.drawHorizontalLine(y1, x1, x2, 1);
+            return;
+        }
+
+        // Draw vertical line
+        if (x1 = x2) {
+            if (y2 > y1) {
+                do Screen.drawVerticalLine(x1, y1, y2);
+            } else {    // y2 < y1
+                do Screen.drawVerticalLine(x1, y2, y1);
+            }
+            return;
+        }
+
+        if (y2 > y1) {
+            do Screen.drawNorthWestSouthEast(x1, y1, x2, y2);
+        } else {    // y2 < y1
+            do Screen.drawSouthWestNorthEast(x1, y1, x2, y2);
+        }
+        return;
     }
 
     /** Draws a filled rectangle whose top left corner is (x1, y1)
      * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
+        // draw horizontal line N times
+        do Screen.drawHorizontalLine(y1, x1, x2, y2 - y1 + 1);
+        return;
     }
 
     /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
     function void drawCircle(int x, int y, int r) {
+        var int dy, dx, rSquare;
+        do Screen.drawPixel(x, y - r);
+        do Screen.drawPixel(x, y + r);
+        do Screen.drawHorizontalLine(y, x - r, x + r, 1);
+
+        let rSquare = r*r;
+        let dy = r - 1;    
+        while (dy > 0) {
+            let dx = Math.sqrt(rSquare - (dy*dy));
+            do Screen.drawHorizontalLine(y - dy, x - dx, x + dx, 1);
+            do Screen.drawHorizontalLine(y + dy, x - dx, x + dx, 1);
+            let dy = dy - 1;
+        }
+        return;
     }
 }
