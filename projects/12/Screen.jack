@@ -11,8 +11,8 @@
  */
 class Screen {
     static Array screen; // Screen array
-    static Array twoPowers;   // hold the value of 2^i (i = 0,...,15)
-    static Array masks;    // hold the mask up to i-th bit (ex: 0000 0111) 
+    static Array twoPowers;   // hold the values of 2^i (i = 0,...,15)
+    static Array masks;    // hold the mask up to i-th bit (ex: mask[2] = 0000 0111) 
     static boolean color; // false (0): white, true (-1): black
 
     /** Initializes the Screen. */
@@ -73,13 +73,13 @@ class Screen {
         return;
     }
 
-    /** Draws a horizontal line from (x1,y) to (x2,y). 
-        Try to draw 16 pixels at a time (special cases: start and end registers).
-        Calculate once and use across rows (for drawRectangle)
-    */
-    function void drawHorizontalLine(int y, int x1, int x2, int repeat) {
-        var int temp1, temp2, mask, address, lineIndex, i1, i2;
-        var int startAddress, startMask, endAddress, endMask;
+    /** Draws a horizontal line from (x1,y) to (x2,y). */
+    // Try to draw 16 pixels at a time (except for start and end registers)
+    // Special case: 2 pixels are on the same addresses
+    function void drawHorizontalLine(int y, int x1, int x2) {
+        var int temp1, temp2, i1, i2;
+        var int startAddress, address, endAddress;
+        var int startMask, endMask;
         let temp1 = 32 * y;
 
         let temp2 = x1 / 16;
@@ -90,12 +90,78 @@ class Screen {
         let endAddress = temp1 + temp2; 
         let i2 = x2 - (temp2 * 16);
 
-        if (startAddress = endAddress) {
+        if (startAddress = endAddress) {    // 2 pixels on the same address
             let startMask = masks[i2] - masks[i1];
             if (color) {
                 let screen[startAddress] = screen[startAddress] | startMask;
             } else {
                 let screen[startAddress] = screen[startAddress] & (~startMask);
+            }
+            return;
+        }
+
+        if (i1 = 0) {
+            let startMask = 0;
+        } else {
+            let startMask = masks[i1 - 1];
+        }
+        if (color) {
+            let startMask = ~startMask;
+        }
+        
+        let endMask = masks[i2];
+        if (~color) {
+            let endMask = ~endMask;
+        }
+
+        if (color) {
+            let screen[startAddress] = screen[startAddress] | startMask;
+            let screen[endAddress] = screen[endAddress] | endMask;
+        } else {
+            let screen[startAddress] = screen[startAddress] & startMask;
+            let screen[endAddress] = screen[endAddress] & endMask;
+        }
+
+        // in-between registers
+        let address = startAddress + 1;
+        while (address < endAddress) {
+            let screen[address] = color;
+            let address = address + 1;
+        }
+        return;
+    }
+
+    /** Repeatedly draws a horizontal line from (x1,y) to (x2,y). */
+    // Used to drawRectangle
+    // y ranges from y1 to y2 (y1 < y2) => repeat: y2 - y1 + 1
+    // startMask and endMask can be calculated once and use across rows
+    // startAddress and endAddress are increased by 32 each time
+    function void drawHorizontalLineRepeat(int y, int x1, int x2, int repeat) {
+        var int temp1, temp2, i1, i2, lineIndex;
+        var int startAddress, address, endAddress;
+        var int startMask, endMask;
+        let temp1 = 32 * y;
+
+        let temp2 = x1 / 16;
+        let startAddress = temp1 + temp2;
+        let i1 = x1 - (temp2 * 16);
+
+        let temp2 = x2 / 16;
+        let endAddress = temp1 + temp2; 
+        let i2 = x2 - (temp2 * 16);
+
+        if (startAddress = endAddress) {    // 2 pixels on the same address
+            let startMask = masks[i2] - masks[i1];
+            let lineIndex = 0;
+            while (lineIndex < repeat) {
+                if (color) {
+                    let screen[startAddress] = screen[startAddress] | startMask;
+                } else {
+                    let screen[startAddress] = screen[startAddress] & (~startMask);
+                }
+
+                let lineIndex = lineIndex + 1;
+                let startAddress = startAddress + 32;
             }
             return;
         }
@@ -134,14 +200,12 @@ class Screen {
             let startAddress = startAddress + 32;
             let endAddress = endAddress + 32;
         }
-        
         return;
     }
 
-    /** Draws a vertical line from (x,y1) to (x,y2) with y1 < y2.
-        the next pixel will be right below current pixel.
-        So address = address + 32, and mask will be the same
-     */
+    /** Draws a vertical line from (x,y1) to (x,y2) with y1 < y2. */
+    // The next pixel will be right below current pixel.
+    // So address = address + 32, and mask will be the same.
     function void drawVerticalLine(int x, int y1, int y2) {
         var int address, temp, mask, y;
         let temp = x / 16;
@@ -169,7 +233,7 @@ class Screen {
        tan(alpha) = dy / dx (fixed)
        tan(beta) = b / a (change over time)
        diff = b.dx - a.dy
-       try to make diff goes to 0 in every move)
+       Try to make diff goes to 0 in every move)
        If diff = 0, choose b direction (arbitrary)
        a = a + 1 => diff = b.dx - a.dy - dy = prevDiff - dy
        b = b + 1 => diff = b.dx + dx - a.dy = prevDiff + dx
@@ -188,7 +252,7 @@ class Screen {
         let diff = 0;
 
         while((~(a > dx)) & (~(b > dy))) {
-            do Screen.drawPixel(x1 + a, y1 + b);
+            do Screen.drawPixel(x1 + a, y1 + b);    // move right and down
 
             // Decide which direction to go
             if (diff > 0) {
@@ -215,7 +279,7 @@ class Screen {
         let diff = 0;
 
         while((~(a > dx)) & (~(b > dy))) {
-            do Screen.drawPixel(x1 + a, y1 - b);
+            do Screen.drawPixel(x1 + a, y1 - b);    // move right and up
 
             // Decide which direction to go
             if (diff > 0) {
@@ -239,7 +303,7 @@ class Screen {
 
         // Draw horizontal line
         if (y1 = y2) {
-            do Screen.drawHorizontalLine(y1, x1, x2, 1);
+            do Screen.drawHorizontalLine(y1, x1, x2);
             return;
         }
 
@@ -253,6 +317,7 @@ class Screen {
             return;
         }
 
+        // Draw diagonals
         if (y2 > y1) {
             do Screen.drawNorthWestSouthEast(x1, y1, x2, y2);
         } else {    // y2 < y1
@@ -265,7 +330,7 @@ class Screen {
      * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
         // draw horizontal line N times
-        do Screen.drawHorizontalLine(y1, x1, x2, y2 - y1 + 1);
+        do Screen.drawHorizontalLineRepeat(y1, x1, x2, y2 - y1 + 1);
         return;
     }
 
@@ -274,14 +339,14 @@ class Screen {
         var int dy, dx, rSquare;
         do Screen.drawPixel(x, y - r);
         do Screen.drawPixel(x, y + r);
-        do Screen.drawHorizontalLine(y, x - r, x + r, 1);
+        do Screen.drawHorizontalLine(y, x - r, x + r);
 
         let rSquare = r*r;
         let dy = r - 1;    
         while (dy > 0) {
             let dx = Math.sqrt(rSquare - (dy*dy));
-            do Screen.drawHorizontalLine(y - dy, x - dx, x + dx, 1);
-            do Screen.drawHorizontalLine(y + dy, x - dx, x + dx, 1);
+            do Screen.drawHorizontalLine(y - dy, x - dx, x + dx);
+            do Screen.drawHorizontalLine(y + dy, x - dx, x + dx);
             let dy = dy - 1;
         }
         return;
