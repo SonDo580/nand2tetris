@@ -71,6 +71,9 @@ class Math {
      */
     function int divide(int x, int y) {
         var int q;
+        if (y = 0) {
+            do Sys.error(3);    // division by 0
+        }
         
         // Handle negative numbers
         if ((x < 0) | (y < 0)) {
@@ -101,6 +104,10 @@ class Math {
         // Strategy: Find y such that y^2 <= x < (y + 1)^2
         // By performing binary search in range 0...2^(16/2) - 1
         var int y, j, next, nextSquare;
+        if (x < 0) {
+            do Sys.error(4);    // cannot compute square root of a negative
+        }
+
         let y = 0;
         let j = 7;
 
