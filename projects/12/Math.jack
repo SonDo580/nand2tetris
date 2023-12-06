@@ -9,6 +9,7 @@
  */
 class Math {
     static Array twoPowers;   // hold the value of 2^i (i = 0,...,15)
+    static int twoQY;   // to support Math.divide
 
     /** Initializes the library. */
     function void init() {
@@ -70,31 +71,50 @@ class Math {
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
+        var boolean negative;
         var int q;
+
         if (y = 0) {
             do Sys.error(3);    // division by 0
         }
-        
-        // Handle negative numbers
-        if ((x < 0) | (y < 0)) {
-            if ((x < 0) & (y < 0)) {
-                return Math.abs(x) / Math.abs(y);
-            }
-            return -(Math.abs(x) / Math.abs(y));
+        if (x = 0) {
+            return 0;
         }
+        
+        let negative = false;
+        if (x < 0) {
+            let negative = ~negative;
+            let x = -x;
+        }
+        if (y < 0) {
+            let negative = ~negative;
+            let y = -y;
+        }
+        
+        let q = Math.dividePositive(x, y);
+        if (negative) {
+            return -q;
+        }
+        return q;
+    }
 
+    /** Returns the integer part of x/y (x > 0, y > 0). */
+    function int dividePositive(int x, int y) {
+        var int q;
         // Overflow when y becomes negative
         if ((y > x) | (y < 0)) {
+            let twoQY = 0;
             return 0;
         }
 
-        let q = x / (y + y);    // q = x / 2y
+        let q = Math.dividePositive(x, y + y);    // q = x / 2y
 
-        if ((x - ((q + q) * y)) < y) {  // x - 2qy < y
+        if ((x - twoQY) < y) {  // x - 2qy < y
             // remainder is less than y
-            return q + q;   // 2q
+            return q + q;   // 2q => 2(2q)(y/2) = 2qy
         }
         // can fit another y
+        let twoQY = twoQY + y;  // 2(2q + 1)(y/2) = 2qy + y
         return q + q + 1;   // 2q + 1
     }
 
