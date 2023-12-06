@@ -9,26 +9,82 @@
  * consists of 32,768 words, each holding a 16-bit binary number.
  */ 
 class Memory {
+    static Array ram, heap, freeList, lastNode;
 
     /** Initializes the class. */
     function void init() {
+        let ram = 0;
+        let heap = 2048;    // Heap base
+        let freeList = heap;    // a linked list
+        let lastNode = freeList;
+        let heap[0] = 0;        // freeList.next (0 indicates end of list)
+        let heap[1] = 14334;    // freeList.size
+        return;
+    }
+
+    // Detect invalid addresses
+    function boolean invalidAddress(int address) {
+        return (address < 0) | (address > 24576);
     }
 
     /** Returns the RAM value at the given address. */
     function int peek(int address) {
+        if (Memory.invalidAddress(address)) {
+            do Sys.error(0);
+        }
+        return ram[address];
     }
 
     /** Sets the RAM value at the given address to the given value. */
     function void poke(int address, int value) {
+        if (Memory.invalidAddress(address)) {
+            do Sys.error(0);
+        }
+        let ram[address] = value;
+        return;
     }
 
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. */
+    //  Use first-fit heuristics
     function int alloc(int size) {
+        var Array block, current;
+        var int needed, remained, available;
+        if (~(size > 0)) {
+            do Sys.error(5);    // allocated memory size must be positive
+        }
+
+        let needed = size + 2;
+        let current = freeList;
+        while (~(current = 0)) {
+            let available = current[1];
+            if (~(available < needed)) {    // Found available space
+                let remained = available - needed;
+                let current[1] = remained;    // Update current node
+
+                let block = current + 2 + remained; // block address
+                let block[0] = 0;   // block next
+                let block[1] = size;    // block size
+
+                return block + 2;   // Return address of block data part
+            }
+            let current = current[0];     // Check next node
+        }
+
+        // TODO: Attempt defragmentation
+
+        do Sys.error(6);    // Heap overflow
+        return block;
     }
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
+    //  Append object block to the end of freeList
     function void deAlloc(Array o) {
+        var Array block;
+        let block = o - 2;  // include metadata part
+        let lastNode[0] = block;
+        let lastNode = block;   // block.next = 0
+        return;
     }    
 }
