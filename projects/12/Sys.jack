@@ -49,11 +49,8 @@ class Sys {
 
     /** Displays the given error code in the form "ERR<errorCode>",
      *  and halts the program's execution. */
-    // There are 20 error codes (1 - 20)
+    // There are 18 error codes (1 - 20 excluding 10, 11)
     function void error(int errorCode) {
-        if ((errorCode < 1) | (errorCode > 20)) {
-            return;
-        }
         do Output.printString("ERR");
         do Output.printInt(errorCode);
         do Sys.halt();
