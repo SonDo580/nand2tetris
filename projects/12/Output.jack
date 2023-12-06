@@ -17,15 +17,14 @@
 class Output {
     static Array charMaps;  // Character map for displaying characters
     static Array screen;    // point to screen start address
-    static int cursorRow, cursorCol;    // cursor location
-    static int addressesPerRow;
+    static int cursorRow, cursorCol, cursorAddress;    // cursor location
 
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
         let screen = 16384;
         let cursorRow = 0;
         let cursorCol = 0;
-        let addressesPerRow = 11 * 32;
+        let cursorAddress = 0;
 
         do Output.initMap();
         return;
@@ -185,6 +184,10 @@ class Output {
      *  and erases the character displayed there. */
     function void moveCursor(int i, int j) {
         var int address, mask, row;
+        if ((i < 0) | (i > 22) | (j < 0) | (j > 63)) {
+            do Sys.error(20);   // illegal cursor location
+        }
+
         let cursorRow = i;
         let cursorCol = j;
         
@@ -194,8 +197,10 @@ class Output {
             let mask = 255; // 0000 0000 1111 1111
         }
         
-        let address = (i * addressesPerRow) + (j / 2);
+        let cursorAddress = (i * 352) + (j / 2);  // 352=32*11 (addresses per row)
+
         let row = 0;
+        let address = cursorAddress;
         while (row < 11) {
             let screen[address] = screen[address] & mask;
             let address = address + 32;
@@ -211,7 +216,7 @@ class Output {
         var int address, mask, i;
 
         let charMap = Output.getMap(c);
-        let address = (cursorRow * addressesPerRow) + (cursorCol / 2);
+        let address = cursorAddress;
         let i = 0;
 
         if ((cursorCol & 1) = 0) { // cursorCol % 2 == 0
@@ -221,6 +226,8 @@ class Output {
                 let address = address + 32;
                 let i = i + 1;
             }
+            // advance the cursor
+            let cursorCol = cursorCol + 1;
         } else {
             while (i < 11) {
                 let mask = 256 * charMap[i]; // xxxx xxxx 0000 0000
@@ -228,15 +235,28 @@ class Output {
                 let address = address + 32;
                 let i = i + 1;
             }
-        }
 
-        // advance the cursor
-        let cursorCol = cursorCol + 1;
+            // advance the cursor
+            if (cursorCol = 63) {
+                if (cursorRow = 22) {
+                    do Output.moveCursor(0, 0);
+                } else {
+                    let cursorCol = 0;
+                    let cursorRow = cursorRow + 1;
+                    let cursorAddress = cursorAddress + 1;
+                }
+            } else {
+                let cursorCol = cursorCol + 1; 
+                let cursorAddress = cursorAddress + 1;
+            }
+        }
         return;
     }
 
     /** displays the given string starting at the cursor location,
      *  and advances the cursor appropriately. */
+    // Memory leak can happen if we pass a string directly
+    // Example: do Output.printString("xxx");
     function void printString(String s) {
         var int len, i;
         let len = s.length();
@@ -275,8 +295,11 @@ class Output {
 
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
-        let cursorCol = 0;
-        let cursorRow = cursorRow + 1;
+        if (cursorRow = 22) {
+            do Output.moveCursor(0, 0);
+        } else {
+            do Output.moveCursor(cursorRow + 1, 0);
+        }
         return;
     }
 
