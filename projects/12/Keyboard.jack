@@ -7,11 +7,11 @@
  * A library for handling user input from the keyboard.
  */
 class Keyboard {
-    static Array keyboard;    // store address of Keyboard RAM
+    static Array keyboard;    
 
     /** Initializes the keyboard. */
     function void init() {
-        let keyboard = 24576;
+        let keyboard = 24576;   // address of Keyboard RAM
         return;
     } 
 
@@ -74,9 +74,9 @@ class Keyboard {
         do Output.printString(message);
         let maxLen = 4;
         let str = String.new(maxLen);
+        let prevStr = null;
         let len = 0;
         let c = 0;
-        let key = 0;
        
         while (~(c = 128)) {    // newline
             let key = 0;
@@ -90,6 +90,9 @@ class Keyboard {
             }
 
             if (c = 128) {  // newline
+                if (~(prevStr = null)) {
+                    do prevStr.dispose();
+                }
                 do Output.println();    
                 return str;
             }
@@ -133,6 +136,7 @@ class Keyboard {
 
         do Output.printString(message);
         let num = 0;
+        let c = 0;
         let firstChar = true;
         let negative = false;
         let buildStop = false;
@@ -172,7 +176,7 @@ class Keyboard {
 
         do Output.println();  
         if (negative) {
-            let num = -num;
+            return -num;
         }
         return num;
     }
