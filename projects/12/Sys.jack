@@ -18,6 +18,7 @@ class Sys {
         do Output.init();
         do Keyboard.init();
         do Main.main();
+        do Sys.halt();
         return;
     }
 
