@@ -56,10 +56,19 @@ class Screen {
         return;
     }
 
+    /** Check if the coordinates is invalid */
+    function boolean illegalCoord(int x, int y) {
+        return (x < 0) | (x > 511) | (y < 0) | (y > 255);
+    }
+
     /** Draws the (x,y) pixel, using the current color. */
     function void drawPixel(int x, int y) {
         // x: 0 -> 511; y: 0 -> 255
         var int address, value, temp;
+        if (Screen.illegalCoord(x, y)) {
+            do Sys.error(7);    // illegal pixel coordinates
+        }
+
         let temp = x / 16;
         let address = (32 * y) + temp; // 32y + x/16
         let value = screen[address];
@@ -295,6 +304,10 @@ class Screen {
 
     /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
     function void drawLine(int x1, int y1, int x2, int y2) {
+        if (Screen.illegalCoord(x1, y1) | Screen.illegalCoord(x2, y2)) {
+            do Sys.error(8);    // illegal line coordinates
+        }
+
         // Make sure the first end is on the left
         if (x1 > x2) {
             do Screen.drawLine(x2, y2, x1, y1);
@@ -303,12 +316,18 @@ class Screen {
 
         // Draw horizontal line
         if (y1 = y2) {
+            if (x1 = x2) {  // same coordinates
+                do Sys.error(8);    // illegal line coordinates
+            }
             do Screen.drawHorizontalLine(y1, x1, x2);
             return;
         }
 
         // Draw vertical line
         if (x1 = x2) {
+            if (y1 = y2) {  // same coordinates
+                do Sys.error(8);    // illegal line coordinates
+            }
             if (y2 > y1) {
                 do Screen.drawVerticalLine(x1, y1, y2);
             } else {    // y2 < y1
@@ -329,6 +348,13 @@ class Screen {
     /** Draws a filled rectangle whose top left corner is (x1, y1)
      * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
+        if (Screen.illegalCoord(x1, y1) | Screen.illegalCoord(x2, y2)) {
+            do Sys.error(9);    // illegal rectangle coordinates
+        }
+        if ((~(x2 > x1)) & (~(y2 > y1))) {
+            do Sys.error(9);    // illegal rectangle coordinates
+        }
+
         // draw horizontal line N times
         do Screen.drawHorizontalLineRepeat(y1, x1, x2, y2 - y1 + 1);
         return;
@@ -337,6 +363,13 @@ class Screen {
     /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
     function void drawCircle(int x, int y, int r) {
         var int dy, dx, rSquare;
+        if (Screen.illegalCoord(x, y)) {
+            do Sys.error(12);   // illegal center coordinates
+        }
+        if ((r < 0) | (r > 181)) {
+            do Sys.error(13);   // illegal radius
+        }
+
         do Screen.drawPixel(x, y - r);
         do Screen.drawPixel(x, y + r);
         do Screen.drawHorizontalLine(y, x - r, x + r);
