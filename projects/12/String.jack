@@ -11,7 +11,7 @@
  * string-oriented operations.
  */
 class String {
-    field Array str;
+    field Array str, prevStr;
     field int len, maxLen;
 
     /** constructs a new empty string with a maximum length of maxLength
@@ -83,6 +83,7 @@ class String {
         let val = 0;
         let negative = false;
 
+        let i = 0;
         while (i < len) {
             let c = str[i];
             if (c > 47 & c < 58) {  // 0 - 9 charCode
@@ -91,6 +92,8 @@ class String {
                 if (i = 0) {
                     if (c = 45) {   // '-'
                         let negative = true;
+                    } else {
+                        return 0;
                     }
                 } else {
                     if (negative) {
@@ -108,8 +111,8 @@ class String {
         return val;
     }
 
-    /** Get a representation of the given value. */
-    method String getIntStr(int val) {
+    /** Sets this string to hold a representation of the given value. */
+    method void setInt(int val) {
         var String s;
         var int lastDigit, temp, c;
         let s = String.new(maxLen);
@@ -130,13 +133,9 @@ class String {
             let s = s.appendChar(c);
         }
 
-        return s;
-    }
-
-
-    /** Sets this string to hold a representation of the given value. */
-    method void setInt(int val) {
-        let str = getIntStr(val);
+        let prevStr = str;
+        let str = s;            // use 's' as 'str' array
+        do prevStr.dispose();    // dispose the old 'str'
         return;
     }
 
