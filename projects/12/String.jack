@@ -17,6 +17,10 @@ class String {
     /** constructs a new empty string with a maximum length of maxLength
      *  and initial length of 0. */
     constructor String new(int maxLength) {
+        if (maxLength < 0) {
+            do Sys.error(14);   // maximum length must be non-negative
+        }
+
         if (maxLength = 0) {
             let str = Array.new(1);
         } else {
