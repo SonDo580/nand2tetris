@@ -35,8 +35,8 @@ class Tokenizer:
         """
         line = ""
         # Ignore empty lines and comments
-        while line == "" or line.startswith("//") or line.startswith("/**"):
-            if line.startswith("/**"):
+        while line == "" or line.startswith("//") or line.startswith("/*"):
+            if line.startswith("/*"):
                 while not line.endswith("*/"):
                     line = self.__processed_line()
             line = self.__processed_line()
