@@ -1,7 +1,7 @@
 from constants import *
-from tokenizer import Tokenizer
-from symbolTable import SymbolTable
-from vmWriter import VMWriter
+from Tokenizer import Tokenizer
+from SymbolTable import SymbolTable
+from VMWriter import VMWriter
 
 
 class CompileEngine:

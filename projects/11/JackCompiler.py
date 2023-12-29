@@ -6,7 +6,7 @@ Xxx.jack => Xxx.vm
 import sys
 import os
 
-from compileEngine import CompileEngine
+from CompileEngine import CompileEngine
 
 
 def get_jack_files(dir_path):
@@ -31,7 +31,7 @@ def process_file(input_path):
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python jackCompiler.py <jack file | jack program>")
+        print("Usage: python JackCompiler.py <Jack program>")
         sys.exit(1)
 
     path = sys.argv[1]
