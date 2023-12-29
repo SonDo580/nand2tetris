@@ -6,8 +6,8 @@ Xxx.jack => output Xxx.xml
 import sys
 import os
 
-from tokenizer import Tokenizer
-from compilationEngine import CompilationEngine
+from Tokenizer import Tokenizer
+from CompilationEngine import CompilationEngine
 
 
 def get_jack_files(dir_path):
@@ -33,7 +33,7 @@ def process_file(input_path):
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python jackAnalyzer.py <Jack file | Jack program>")
+        print("Usage: python JackAnalyzer.py <Jack program>")
         sys.exit(1)
 
     path = sys.argv[1]

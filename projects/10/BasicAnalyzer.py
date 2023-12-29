@@ -6,7 +6,7 @@ Xxx.jack => output XxxT.xml
 import sys
 import os
 
-from tokenizer import Tokenizer
+from Tokenizer import Tokenizer
 
 
 def tokenize(tokenizer, output_file):
@@ -41,7 +41,7 @@ def process_file(input_path):
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python basicAnalyzer.py <Jack file | Jack program>")
+        print("Usage: python BasicAnalyzer.py <Jack program>")
         sys.exit(1)
 
     path = sys.argv[1]
