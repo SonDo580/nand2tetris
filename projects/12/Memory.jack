@@ -50,6 +50,8 @@ class Memory {
     function int alloc(int size) {
         var Array block, current;
         var int needed, remained, available;
+        var boolean enough;
+
         if (~(size > 0)) {
             do Sys.error(5);    // allocated memory size must be positive
         }
@@ -60,7 +62,7 @@ class Memory {
             let available = current[1];
             if (~(available < needed)) {    // Found available space
                 let remained = available - needed;
-                let current[1] = remained;    // Update current node
+                let current[1] = remained;    // Update current node size
 
                 let block = current + 2 + remained; // block address
                 let block[0] = 0;   // block next
@@ -70,11 +72,40 @@ class Memory {
             }
             let current = current[0];     // Check next node
         }
-
-        // TODO: Attempt defragmentation
-
+        
+        let enough = Memory.deFrag(needed);
+        if (enough) {
+            return Memory.alloc(size);
+        }
+ 
         do Sys.error(6);    // Heap overflow
         return block;
+    }
+
+    /** Attempt defragmentation. 
+     *  Check if there's enough space for new object. */
+    function boolean deFrag(int neededSize) {
+        var int current, next, enough;
+        var boolean enough;
+        let current = freeList;
+        let enough = false;
+
+        while (~(current = 0)) {
+            let next = current[0];
+            
+            // Merge current and next blocks if they are adjacent.
+            if ((~(next = 0)) & ((current + current[1] + 2) = next)) {
+                let current[1] = current[1] + next[1] + 2;   // Update current block size
+                let current[0] = next[0];   // Skip the merged block; 
+
+                if (~(current[1] < neededSize)) {
+                    let enough = true;
+                }
+            } else {
+                let current = next;
+            }
+        }
+        return enough;
     }
 
     /** De-allocates the given object (cast as an array) by making
