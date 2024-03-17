@@ -5,7 +5,7 @@ from utils import to_asm
 def main():
     # Check for correct usage
     if len(sys.argv) != 2:
-        print("Usage: python3 vmTranslator.py <.vm file>")
+        print("Usage: python VMTranslator.py <.vm file>")
         exit(1)
 
     # Open input file

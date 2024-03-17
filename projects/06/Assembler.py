@@ -1,5 +1,3 @@
-# TODO: Convert instructions with format ixxaccccccdddjjj to binary code
-
 import sys
 import re
 
@@ -9,7 +7,7 @@ from constants import SYMBOLS, DEST_CODE_DICT, JUMP_CODE_DICT, COMP_CODE_DICT
 def main():
     # Check for correct usage
     if len(sys.argv) != 2:
-        print("Usage: python3 assembler.py <.asm file>")
+        print("Usage: python Assembler.py <.asm file>")
         exit(1)
 
     # Open input file
