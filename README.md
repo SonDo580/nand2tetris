@@ -8,10 +8,10 @@
 - p1: Basic logic gates
 - p2: Arithmetic units
 - p3: Memory units
-- p4: Write programs in Hack assembly
-- p5: Assemble the Hack computer
-- p6: Develop the Hack assembler
-- p7&8: Develop the VM Translator
-- p9: Develop an interactive game with Jack
-- p10&11: Develop the Jack Compiler
-- p12: Develop a basic OS for Hack
+- p4: Programs in Hack assembly
+- p5: Hack computer
+- p6: Hack assembler
+- p7&8: VM Translator
+- p9: An interactive game with Jack
+- p10&11: Jack Compiler
+- p12: Jack Standard Library
