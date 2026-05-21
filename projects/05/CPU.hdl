@@ -45,57 +45,55 @@ CHIP CPU {
 
     PARTS:
     // Instruction: ixxaccccccdddjjj
-    //     i (opcode): 0 => A-instruction; 1 => C-instruction
-
-    //     C-instruction:
-    //     acccccc => comp
-    //     a: 0 => use A; 1 => use M
-    //     ddd => dest: ADM
-    //     jjj => jump
+    // . i (opcode): 0 -> A-instruction; 1 -> C-instruction
+    //
+    // C-instruction:
+    // . acccccc -> comp
+    // . a: 0 -> use A; 1 -> use M
+    // . ddd -> dest: ADM
+    // . jjj -> jump: LEG
 
     // Check instruction type
     Not(in=instruction[15], out=Ainstruction);
     Not(in=Ainstruction, out=Cinstruction);
 
-    // i=1; ddd=1xx => C-instruction write to register A
+    // i=1; ddd=1xx -> C-instruction write to register A
     And(a=Cinstruction, b=instruction[5], out=ALUtoA);
     Mux16(a=instruction, b=ALUout, sel=ALUtoA, out=Ain);
 
     // load A when: A-instruction || C-instruction write to register A
     Or(a=Ainstruction, b=ALUtoA, out=loadA);
-    ARegister(in=Ain, load=loadA, out=Aout);    // the first 15 bits hold current memory address
+    ARegister(in=Ain, load=loadA, out=Aout, out[0..14]=addressM); 
+    // the first 15 bits of A hold current memory address (M)
 
-    // a=0 => select A; a=1 => select M
+    // a=0 -> use A in comp; a=1 -> use M in comp
     Mux16(a=Aout, b=inM, sel=instruction[12], out=AMout);
 
-    // i=1; ddd=x1x => C-instruction write to register D
+    // i=1; ddd=x1x -> C-instruction write to register D
     And(a=Cinstruction, b=instruction[4], out=loadD);
     DRegister(in=ALUout, load=loadD, out=Dout);
 
     // Calculate: feed D, (A or M) and the comp bits (cccccc) to ALU
     ALU(x=Dout, y=AMout, zx=instruction[11], nx=instruction[10], zy=instruction[9], 
     ny=instruction[8], f=instruction[7], no=instruction[6], 
-    out=ALUout, zr=zeroOut, ng=negativeOut);
+    out=ALUout, out=outM, zr=zeroOut, ng=negativeOut);
+    // always set outM=ALUout, writeM will decide whether to actually write to RAM[M] 
 
-    // i=1; ddd=xx1 => C-instruction write to register M
-    // These will be used by 'Memory' chip
+    // i=1; ddd=xx1 => C-instruction write to RAM[M]
     And(a=Cinstruction, b=instruction[3], out=writeM);
-    Or16(a=false, b=Aout, out[0..14]=addressM); // the MSB (i=0) of Aout is opcode
-    Or16(a=false, b=ALUout, out=outM);
-
+    
     // Program Counter logic
-    // Check ALU output and jump field (jjj) of C-instruction
-    And(a=zeroOut, b=instruction[1], out=jeq);  // jjj=010 => JEQ
-    And(a=negativeOut, b=instruction[2], out=jlt);  // jjj=100 => JLT
-
+    And(a=negativeOut, b=instruction[2], out=jlt);  // jjj=1xx => JLT
+    And(a=zeroOut, b=instruction[1], out=jeq); // jjj=x1x => JEQ
+    
     Or(a=zeroOut, b=negativeOut, out=zeroOrNegativeOut);
     Not(in=zeroOrNegativeOut, out=positiveOut);
-    And(a=positiveOut, b=instruction[0], out=jgt);  // jjj=001 => JGT
-
+    And(a=positiveOut, b=instruction[0], out=jgt);  // jjj=xx1 => JGT
+    
     Or(a=jlt, b=jeq, out=jle);
-    Or(a=jle, b=jgt, out=jumpToA);  // there's a jump => loadPC
-    And(a=Cinstruction, b=jumpToA, out=loadPC);
+    Or(a=jle, b=jgt, out=jumpToA);
 
-    Not(in=loadPC, out=incPC);  // increment PC if there's no jump
-    PC(in=Aout, load=loadPC, inc=incPC, reset=reset, out[0..14]=pc); // Only use the first 14 bits
+    And(a=Cinstruction, b=jumpToA, out=loadPC); // jump => load PC
+    Not(in=loadPC, out=incPC);  // no jump => increment PC 
+    PC(in=Aout, load=loadPC, inc=incPC, reset=reset, out[0..14]=pc);
 }
