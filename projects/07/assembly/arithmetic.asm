@@ -1,14 +1,14 @@
-// x, y is the 2 last addresses in the stack
+// x, y are on top of stack
 
 // Implement: add
 @SP
 M=M-1   // SP--
-A=M     // go to y
+A=M     // go to address of y
 D=M     // D = y
 
 @SP     
 M=M-1   // SP--
-A=M     // go to x
+A=M     // go to address of x
 M=D+M   // x = x + y
 
 @SP
@@ -18,12 +18,12 @@ M=M+1   // SP++
 // Implement: sub
 @SP
 M=M-1   // SP--
-A=M     // go to y
+A=M     // go to address of y
 D=M     // D = y
 
 @SP     
 M=M-1   // SP--
-A=M     // go to x
+A=M     // go to address of x
 M=M-D   // x = x - y
 
 @SP
@@ -32,7 +32,7 @@ M=M+1   // SP++
 // Implement: neg
 @SP
 M=M-1   // SP--
-A=M     // go to y
+A=M     // go to address of y
 M=-M    // y = -y
 
 @SP

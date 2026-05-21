@@ -1,21 +1,21 @@
-// x, y is the 2 last addresses in the stack
+// x, y are on top of stack
 
 // Implement: eq
 @SP
 M=M-1   // SP--
-A=M     // go to y
+A=M     // go to address of y
 D=M     // D = y
 
 @SP     
 M=M-1   // SP--
-A=M     // go to x
+A=M     // go to address of x
 D=M-D   // D = x - y
 
 @TRUE
-D;JEQ   // D == 0 => x == y => jump to TRUE
+D;JEQ   // D == 0 -> x == y -> jump to TRUE
 
 @SP
-A=M     // go to x
+A=M     // go to address of x
 M=0     // set x = false
 
 @CONTINUE
@@ -23,7 +23,7 @@ M=0     // set x = false
 
 (TRUE)
 @SP
-A=M     // go to x
+A=M     // go to address of x
 M=-1    // set x = true
 
 (CONTINUE)
@@ -33,12 +33,12 @@ M=M+1   // SP++
 // Implement: gt
 // ...similar
 @TRUE
-D;JGT   // D > 0 => x > y => jump to TRUE
+D;JGT   // D > 0 -> x > y -> jump to TRUE
 // ...similar
 
 
 // Implement: lt
 // ...similar
 @TRUE
-D;JLT   // D < 0 => x < y => jump to TRUE
+D;JLT   // D < 0 -> x < y -> jump to TRUE
 // ...similar
