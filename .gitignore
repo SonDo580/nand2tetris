@@ -1,6 +1,7 @@
-tools
 .vscode
 **/__pycache__
+
+tools
 *.cmp
 *.tst
 *.out
@@ -19,12 +20,14 @@ projects/07/StackArithmetic
 
 projects/08/FunctionCalls
 projects/08/ProgramFlow
+
 projects/09/Average
 projects/09/BitmapEditor
 projects/09/Fraction
 projects/09/HelloWorld
 projects/09/List
 projects/09/Square
+
 projects/09/**/*.vm
 
 projects/10/ArrayTest
