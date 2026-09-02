@@ -1,33 +1,35 @@
-// Implement: pop local i
-// . address = RAM[LCL] + i 
-// . SP--
-// . RAM[address] = RAM[SP]
-
-@i
-D=A     // D = i
-@LCL
-D=D+M   // D = i + RAM[LCL]
-@address
-M=D     // RAM[address] = RAM[LCL] + i
-
-@SP
-M=M-1   // SP--
-A=M     // go to address stored in SP
-D=M     // D = RAM[SP]
-
-@address
-A=M     // go to addr_value = RAM[address]
-M=D     // RAM[addr_value] = RAM[SP]
-
-// ++++++++++++++++++++++++++++++++++++++++
-// ++++++++++++++++++++++++++++++++++++++++
-// ++++++++++++++++++++++++++++++++++++++++
-
-
-// Implement: push local i
+// === Implement: pop local i === 
+// ==============================
+//
+// (i is numeric value, not label)
 // . address = RAM[LCL] + i
-// . RAM[SP] = RAM[address]
-// . SP++
+// . RAM[SP]--
+// . RAM[address] = RAM[RAM[SP]]
+
+@i
+D=A     // D = i
+@LCL
+D=D+M   // D = i + RAM[LCL]
+@address
+M=D     // RAM[address] = RAM[LCL] + i
+
+@SP
+M=M-1   // RAM[SP]--
+A=M     // go to RAM[SP] (slot above top element of stack, contains popped value)
+D=M     // D = RAM[RAM[SP]]
+
+@address
+A=M     // go to RAM[address] = RAM[LCL] + i
+M=D     // RAM[RAM[LCL] + i] = RAM[SP]
+
+
+// === Implement: push local i === 
+// ===============================
+//
+// (i is numeric value, not label)
+// . address = RAM[LCL] + i
+// . RAM[RAM[SP]] = RAM[address]
+// . RAM[SP]++
 
 @i
 D=A     // D = i
@@ -36,18 +38,17 @@ D=D+M   // D = i + RAM[LCL]
 
 @address
 M=D     // RAM[address] = RAM[LCL] + i
-A=M     // go to addr_value = RAM[address]
-D=M     // D = RAM[addr_value]
+A=M     // go to RAM[address] = RAM[LCL] + i
+D=M     // D = RAM[RAM[LCL] + i]
 
 @SP
-A=M     // go to address stored in SP
-M=D     // RAM[SP] = RAM[addr_value]
+A=M     // go to RAM[SP] (slot above top element of stack)
+M=D     // RAM[RAM[SP]] = RAM[RAM[LCL] + i]
 
 @SP
-M=M+1   // SP++
+M=M+1   // RAM[SP]++
 
-// ++++++++++++++++++++++++++++++++++++++++
-// ++++++++++++++++++++++++++++++++++++++++
-// ++++++++++++++++++++++++++++++++++++++++
 
-// argument, this, that: similar implementations
+// === argument, this, that ===
+// ============================
+// (similar implementations)
