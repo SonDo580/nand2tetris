@@ -1,56 +1,58 @@
-// Bootstrap code
+// === Bootstrap code ===
 
-// Initialize SP
+// Initialize SP: SP = 256
 @256
 D=A
 @SP
-M=D     // SP = 256
+M=D
 
 // Set LCL, ARG, THIS, THAT to invalid values
+// . LCL = -1
 @1
 D=-A
 @LCL
-M=D     // LCL = -1
-
+M=D     
+// . ARG = -2
 @2
 D=-A
 @ARG
-M=D     // ARG = -2
-
+M=D
+// . THIS = -3
 @3
 D=-A
 @THIS
-M=D     // THIS = -3
-
+M=D
+// . THAT = -4
 @4
 D=-A
 @THAT
-M=D     // THAT = -4
+M=D
 
-// Call Sys.init: call Sys.init 0
-// Save the return address label
+// Call Sys.init: `call Sys.init 0`
+
+// Save return address
 @Sys$ret
 D=A
-
+// . push onto stack
 @SP
 A=M
 M=D
 @SP
-M=M+1   // push return address to stack
+M=M+1   
 
-// Save segment pointers
+// Save segment pointers: LCL, ARG, THIS, THAT
 @LCL
 D=M
-
+// . push onto stack
 @SP
 A=M
 M=D
 @SP
-M=M+1   // push LCL to stack
+M=M+1   
 
-//... push current ARG, THIS, THAT to stack
+// (... ARG, THIS, THAT is similar)
 
-// Reposition ARG: ARG = SP - 5
+// Reposition ARG: ARG = SP - 5 - nArgs = SP - 5
 @5
 D=A   
 @SP
@@ -58,13 +60,13 @@ D=M-D
 @ARG
 M=D
 
-// Repositions LCL: LCL = SP 
+// Reposition LCL: LCL = SP
 @SP
 D=M
 @LCL
 M=D
 
-// goto Sys.init
+// Goto Sys.init
 @Sys.init
 0;JMP
 

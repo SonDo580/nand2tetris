@@ -1,46 +1,50 @@
-// Implement: call Foo.mult 2
-// Context: we are in a function/method foo of class Foo
+// === Implement: call Foo.mult 2 ===
+// ==================================
+//
+// - caller: function/method 'foo' of class 'Foo'.
+// - nArgs = 2 = number of arguments pushed (by caller) onto the stack.
 
-// Save the return address label (Foo.foo$ret.{index})
+
+// Save return address: label (Foo.foo$ret.{index})
 @Foo.foo$ret.1
 D=A
-
+// . push onto stack
 @SP
 A=M
 M=D
 @SP
-M=M+1   // push D to stack
+M=M+1
 
-// Save the caller's segment pointers
+// Save the caller's segment pointers (push onto stack)
 @LCL
 D=M
-
+// . push onto stack
 @SP
 A=M
 M=D
 @SP
-M=M+1   // push D to stack
+M=M+1
 
 //... ARG, THIS, THAT are similar to LCL
 
-// Reposition ARG: ARG = SP - 5 - nArgs
-// 5: spaces for return adress and caller's segment pointers
-@2  
+// Reposition ARG for callee: ARG = SP - 5 - nArgs
+// (5: number of slots for return address and caller's segment pointers)
+@2
 D=A
 @5
-D=D+A   
+D=D+A
 @SP
 D=M-D
 @ARG
 M=D
 
-// Repositions LCL: LCL = SP 
+// Reposition LCL for callee: LCL = SP
 @SP
 D=M
 @LCL
 M=D
 
-// goto Foo.mult
+// Goto Foo.mult
 @Foo.mult
 0;JMP
 

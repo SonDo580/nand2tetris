@@ -1,12 +1,13 @@
-// Implement: return
+// === Implement: return ===
+// =========================
 
-// Get the end address of caller's frame 
+// Get end address of caller's frame: endFrame = callee's LCL
 @LCL
 D=M
 @endFrame
-M=D       // endFrame = LCL
+M=D
 
-// Get the return address
+// Get return address: returnAddress = *(endFrame - 5)
 @5
 D=A
 @endFrame
@@ -14,9 +15,9 @@ D=M-D
 A=D
 D=M
 @returnAddress
-M=D        // returnAddress = *(endFrame - 5)
+M=D
 
-// Handle the return value for the caller
+// Put callee's return value right above working stack of caller
 @SP
 M=M-1   // SP--
 A=M
@@ -25,13 +26,13 @@ D=M     // D = return value
 A=M
 M=D     // *ARG = D = return value
 
-// Reposition SP
+// Reposition SP (discard callee's stack)
 @ARG
 D=M
 @SP
 M=D+1   // SP = ARG + 1
 
-// Restore THAT
+// Restore THAT: THAT = *(endFrame - 1)
 @1
 D=A
 @endFrame
@@ -39,9 +40,9 @@ D=M-D
 A=D
 D=M
 @THAT
-M=D        // THAT = *(endFrame - 1)
+M=D
 
-// Restore THIS
+// Restore THIS: THIS = *(endFrame - 2)
 @2
 D=A
 @endFrame
@@ -49,9 +50,9 @@ D=M-D
 A=D
 D=M
 @THIS
-M=D        // THAT = *(endFrame - 2)
+M=D
 
-// Restore ARG
+// Restore ARG: // ARG = *(endFrame - 3)
 @3
 D=A
 @endFrame
@@ -59,9 +60,9 @@ D=M-D
 A=D
 D=M
 @ARG
-M=D        // THAT = *(endFrame - 3)
+M=D
 
-// Restore LCL
+// Restore LCL: LCL = *(endFrame - 4)
 @4
 D=A
 @endFrame
@@ -69,9 +70,9 @@ D=M-D
 A=D
 D=M
 @LCL
-M=D        // THAT = *(endFrame - 4)
+M=D
 
-// go to returnAddress
+// Jump to return address
 @returnAddress
 A=M
 0;JMP
