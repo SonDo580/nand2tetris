@@ -53,7 +53,3 @@
 - fixed, mapped on RAM[3] and RAM[4].
 - accessing `pointer 0` <-> accessing `RAM[THIS]`.
 - accessing `pointer 1` <-> accessing `RAM[THAT]`.
-
-# Other
-
-- R13, R14, R15: general purpose registers.

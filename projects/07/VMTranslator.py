@@ -1,51 +1,39 @@
+"""
+VMTranslator: Drive the translation process
+- input (VM file): a text file named <filename>.vm
+- output (generated assembly): a text file named <filename>.asm
+- assumption: <prog>.vm is error-free.
+"""
+
 import sys
-from utils import to_asm
+from pathlib import Path
+
+from Parser import Parser
+from CodeWriter import CodeWriter
+
+USAGE_MSG = "Usage: python VMTranslator.py <filename>.vm"
 
 
 def main():
-    # Check for correct usage
     if len(sys.argv) != 2:
-        print("Usage: python VMTranslator.py <.vm file>")
-        exit(1)
+        print(USAGE_MSG)
+        sys.exit(1)
 
-    # Open input file
-    fname = sys.argv[1]
-    try:
-        fhandle = open(fname)
-    except:
-        print(f"File cannot be opened: {fname}")
-        exit(1)
+    in_path = Path(sys.argv[1])
+    if in_path.suffix != ".vm":
+        print(USAGE_MSG)
+        sys.exit(1)
+    namespace = in_path.stem
 
-    # Get file name without extension (for static variables)
-    file = fname.split("/")[-1]
-    name_space = file.split(".")[0]
+    out_path = in_path.with_suffix(".asm")
 
-    # Create and open output file
-    fout_name = fname.replace(".vm", ".asm")
-    fout_handle = open(fout_name, "w")
+    with open(in_path, "r") as in_file, open(out_path, "w") as out_file:
+        parser = Parser(in_file)
+        writer = CodeWriter(out_file)
 
-    for line in fhandle:
-        # Remove whitespaces at 2 ends
-        line = line.strip()
-
-        # Ignore comments and empty lines
-        if line.startswith("//") or len(line) == 0:
-            continue
-
-        # Remove inline comments
-        indexComment = line.find("//")
-        if indexComment != -1:
-            line = line[:indexComment].rstrip()
-
-        # Add a comment to the output file (the vm code)
-        fout_handle.write(f"// {line}\n")
-
-        # Convert the VM command to Hack assembly
-        fout_handle.write(to_asm(line, name_space))
-
-    # Close the files
-    fhandle.close()
-    fout_handle.close()
+        while parser.advance():
+            instruction = parser.current_instruction()
+            writer.write(instruction, namespace)
 
 
 if __name__ == "__main__":
