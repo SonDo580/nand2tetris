@@ -19,5 +19,5 @@
 #     print(f"RAM512(in=in, load=load{i+1}, address=address[0..8], out=out{i+1});")
 
 # RAM16K
-for i in range(4):
-    print(f"RAM4K(in=in, load=load{i+1}, address=address[0..11], out=out{i+1});")
+# for i in range(4):
+#     print(f"RAM4K(in=in, load=load{i+1}, address=address[0..11], out=out{i+1});")
