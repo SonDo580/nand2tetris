@@ -16,13 +16,13 @@ class Board {
     let currentRow = 0;
     let currentCol = 0;
     do setDirections();
-    do initilize();
+    do initialize();
     do draw();
     return this;
   }
 
-  /** Initilize the board with 4 tiles at the center */
-  method void initilize() {
+  /** Initialize the board with 4 tiles at the center */
+  method void initialize() {
     var int i;
     let i = (size / 2) - 1;
     do content.set(i, i, 0);      // black
