@@ -1,99 +1,51 @@
+"""
+VMTranslator: Drive the translation process
+- input: VM file <file>.vm or folder containing VM files <folder>
+- output (generated assembly): <file>.asm or <folder>/<folder>.asm
+- assumption: input is error-free.
+"""
+
 import sys
-import os
+from pathlib import Path
 
-from utils import bootstrap, to_asm
+from Parser import Parser
+from CodeWriter import CodeWriter
 
-
-def get_vm_files(dir_path):
-    vm_files = []
-    for item in os.listdir(dir_path):
-        if item.endswith(".vm"):
-            vm_files.append(os.path.join(dir_path, item))
-    return vm_files
-
-
-def get_fout_name(input_path):
-    root, extension = os.path.splitext(input_path)
-    if extension == ".vm":
-        return f"{root}.asm"
-
-    output_name = root.split(os.path.sep)[-1]
-    return f"{root}{os.path.sep}{output_name}.asm"
-
-
-def generate_output(fname, fout_handle):
-    # Open input file
-    fhandle = open(fname)
-
-    # Get file name without extension (for static variables)
-    name_space = (os.path.splitext(fname)[0]).split(os.path.sep)[-1]
-
-    for line in fhandle:
-        # Remove whitespaces at 2 ends
-        line = line.strip()
-
-        # Ignore comments and empty lines
-        if line.startswith("//") or len(line) == 0:
-            continue
-
-        # Remove inline comments
-        indexComment = line.find("//")
-        if indexComment != -1:
-            line = line[:indexComment].rstrip()
-
-        # Add a comment to the output file (the vm code)
-        fout_handle.write(f"// {line}\n")
-
-        # Convert the VM command to Hack assembly
-        fout_handle.write(to_asm(line, name_space))
-
-    # Close the input file
-    fhandle.close()
+USAGE_MSG = "Usage: python VMTranslator.py {<file>.vm | <folder>}"
 
 
 def main():
-    # Check for correct usage
     if len(sys.argv) != 2:
-        print("Usage: python VMTranslator.py <VM file | VM program>")
-        exit(1)
-
-    path = sys.argv[1]
-    if os.path.isfile(path):
-        if not path.endswith(".vm"):
-            print("Not a VM file")
-            sys.exit(1)
-
-        # Open output file in write mode
-        fout_name = get_fout_name(path)
-        fout_handle = open(fout_name, "w")
-
-        # Generate output
-        generate_output(path, fout_handle)
-
-        # Close the output file
-        fout_handle.close()
-
-    elif os.path.isdir(path):
-        vm_files = get_vm_files(path)
-
-        # Open output file in append mode
-        fout_name = get_fout_name(path)
-        fout_handle = open(fout_name, "a")
-
-        # Add bootstrap code
-        fout_handle.write(f"// Bootstrap code\n")
-        fout_handle.write(bootstrap())
-
-        # Generate output from all .vm files
-        for fname in vm_files:
-            generate_output(fname, fout_handle)
-
-        # Close the output file
-        fout_handle.close()
-
-    else:
-        print("File or folder not exist")
+        print(USAGE_MSG)
         sys.exit(1)
+
+    in_path = Path(sys.argv[1])
+    if in_path.is_dir():
+        vm_file_paths = [p for p in in_path.glob("*.vm") if p.is_file()]
+        if not vm_file_paths:
+            print("NO VM files found in folder.")
+            sys.exit(1)
+        out_path = in_path / f"{in_path.name}.asm"
+    else:
+        if in_path.suffix != ".vm":
+            print(USAGE_MSG)
+            sys.exit(1)
+        vm_file_paths = [in_path]
+        out_path = in_path.with_suffix(".asm")
+
+    with open(out_path, "w") as out_file:
+        writer = CodeWriter(out_file)
+        if in_path.is_dir():
+            writer.writeBootstrap()
+
+        for vm_file_path in vm_file_paths:
+            with open(vm_file_path, "r") as in_file:
+                writer.setInputFilename(vm_file_path.stem)
+                parser = Parser(in_file)
+
+                while parser.advance():
+                    instruction = parser.currentInstruction()
+                    writer.write(instruction)
 
 
 if __name__ == "__main__":
